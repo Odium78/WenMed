@@ -11,7 +11,7 @@ import javax.swing.SwingUtilities;
  * @author ROG
  */
 public class Wenmed {
-    public static void main(String[] args) {
+    public static void main(String[] args) { 
         System.out.println("Hello World!");
         
         ConnectDB db = new ConnectDB("jdbc:sqlite:data.db");
