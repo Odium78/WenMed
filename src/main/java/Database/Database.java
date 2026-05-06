@@ -268,55 +268,25 @@ public class Database {
     }
     
     public boolean deleteStock(int id) {
-    String query = "DELETE FROM kiosk_inv WHERE id = ?";
-    try (PreparedStatement exec = database.prepareStatement(query)) {
-        exec.setInt(1, id);
-        int rows = exec.executeUpdate();
-        if (rows > 0) {
-            JOptionPane.showMessageDialog(null, "Stock entry deleted.",
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
-            return true;
-        } else {
-            JOptionPane.showMessageDialog(null, "No entry found with that ID.",
-                    "Not Found", JOptionPane.WARNING_MESSAGE);
-            return false;
-        }
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, e.getMessage(),
-                "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
-        return false;
-    }
-}
-    
-    public void seedIfEmpty() {
-        String countQuery = "SELECT COUNT(*) FROM drugs";
-        try (Statement stmt = database.createStatement();
-             ResultSet rs = stmt.executeQuery(countQuery)) {
-            if (rs.next() && rs.getInt(1) == 0) {
-                System.out.println("[Database] Seeding initial drug data...");
-                String insert = "INSERT INTO drugs(name, type) VALUES(?,?)";
-                try (PreparedStatement ps = database.prepareStatement(insert)) {
-                    String[][] seeds = {
-                        {"Paracetamol",   "Analgesic"},
-                        {"Amoxicillin",   "Antibiotic"},
-                        {"Ibuprofen",     "Anti-inflammatory"},
-                        {"Cetirizine",    "Antihistamine"},
-                        {"Metformin",     "Antidiabetic"}
-                    };
-                    for (String[] s : seeds) {
-                        ps.setString(1, s[0]);
-                        ps.setString(2, s[1]);
-                        ps.addBatch();
-                    }
-                    ps.executeBatch();
-                    System.out.println("[Database] Seed complete.");
-                }
+        String query = "DELETE FROM kiosk_inv WHERE id = ?";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setInt(1, id);
+            int rows = exec.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(null, "Stock entry deleted.",
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                return true;
+            } else {
+                JOptionPane.showMessageDialog(null, "No entry found with that ID.",
+                        "Not Found", JOptionPane.WARNING_MESSAGE);
+                return false;
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+            JOptionPane.showMessageDialog(null, e.getMessage(),
                     "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
         }
-    }   
+    }
     
     public boolean updateUsername(String oldUsername, String newUsername) {
         String query = "UPDATE users SET username = ? WHERE username = ?";
