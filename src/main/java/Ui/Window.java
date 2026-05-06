@@ -718,7 +718,7 @@ public class Window extends javax.swing.JFrame {
 
         jLabel18.setFont(new java.awt.Font("Segoe UI", 3, 24)); // NOI18N
         jLabel18.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel18.setText("Form:");
+        jLabel18.setText("Type:");
 
         jLabel19.setFont(new java.awt.Font("Segoe UI", 3, 24)); // NOI18N
         jLabel19.setForeground(new java.awt.Color(51, 51, 51));
