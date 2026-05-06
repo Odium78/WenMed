@@ -1,74 +1,103 @@
 package Database;
 
+import LocalData.Drug;
+import LocalData.Stock;
+import LocalData.User;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
 
-public class Database{
+public class Database {
+
     private ConnectDB connectDB;
     public Connection database;
-    public Database(ConnectDB connectionDB){
+
+    public Database(ConnectDB connectionDB) {
         this.connectDB = connectionDB;
-        this.database = connectionDB.getConnection();
+        this.database  = connectionDB.getConnection();
     }
-    
-    public boolean authUser(String username, String password){
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // AUTH  (kept for direct use if ever needed; prefer LocalDataStore in UI)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    public boolean authUser(String username, String password) {
         String query = "SELECT * FROM users WHERE username = ? AND password = ?";
-        
-        try(PreparedStatement exec = database.prepareStatement(query)){
+        try (PreparedStatement exec = database.prepareStatement(query)) {
             exec.setString(1, username);
             exec.setString(2, password);
-            
             ResultSet set = exec.executeQuery();
-            if (set.next()){
-                return true;
-            } else {
-                return false;
-            }
-        } catch(SQLException e){
-            JOptionPane.showMessageDialog(null, e.getStackTrace(), "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return set.next();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
-    
-    public boolean addUser(String username, String password, String type){
+
+    public String getUserType(String username, String password) {
+        String query = "SELECT type FROM users WHERE username = ? AND password = ?";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setString(1, username);
+            exec.setString(2, password);
+            ResultSet set = exec.executeQuery();
+            if (set.next()) return set.getString("type");
+            return null;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // USER CRUD
+    // ═════════════════════════════════════════════════════════════════════════
+
+    public boolean addUser(String username, String password, String type) {
         String query = "INSERT INTO users(username, password, type) VALUES(?,?,?)";
-        try(PreparedStatement exec = database.prepareStatement(query)){
+        try (PreparedStatement exec = database.prepareStatement(query)) {
             exec.setString(1, username);
             exec.setString(2, password);
             exec.setString(3, type);
-            
             exec.executeUpdate();
-            JOptionPane.showMessageDialog(null, username + " Created Successfully", "User Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, username + " Created Successfully",
+                    "User Success", JOptionPane.INFORMATION_MESSAGE);
             return true;
-        } catch(SQLException e){
-            JOptionPane.showMessageDialog(null, e.getStackTrace(), "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
-    
-    public boolean deleteUser(String username){
+
+    public boolean deleteUser(String username) {
         String query = "DELETE FROM users WHERE username = ?";
-        try(PreparedStatement exec = database.prepareStatement(query)){
+        try (PreparedStatement exec = database.prepareStatement(query)) {
             exec.setString(1, username);
-            
             int rowsAffected = exec.executeUpdate();
-            
-            if (rowsAffected > 0){
-                JOptionPane.showMessageDialog(null, username + " Deleted Successfully", "User Success", JOptionPane.OK_OPTION);
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, username + " Deleted Successfully",
+                        "User Success", JOptionPane.OK_OPTION);
                 return true;
-            } else{
-                JOptionPane.showMessageDialog(null, username + " Not Found", "User ERROR", JOptionPane.ERROR_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, username + " Not Found",
+                        "User ERROR", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
-        } catch(SQLException e){
-                JOptionPane.showMessageDialog(null, e.getStackTrace(), "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
-                return false;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
         }
     }
-    
+
+    /**
+     * Returns a simple String[] list (username, type) — kept for legacy use.
+     */
     public List<String[]> getUsers() {
-        java.util.List<String[]> users = new java.util.ArrayList<>();
+        List<String[]> users = new ArrayList<>();
         String query = "SELECT username, type FROM users ORDER BY username";
         try (Statement stmt = database.createStatement();
              ResultSet set = stmt.executeQuery(query)) {
@@ -84,27 +113,254 @@ public class Database{
         }
         return users;
     }
-    
-    public String getUserType(String username, String password) {
-        String query = "SELECT type FROM users WHERE username = ? AND password = ?";
-        try (PreparedStatement exec = database.prepareStatement(query)) {
-            exec.setString(1, username);
-            exec.setString(2, password);
-            ResultSet set = exec.executeQuery();
-            if (set.next()) {
-                return set.getString("type");
+
+    /**
+     * Returns full User objects (including password) for loading into
+     * LocalDataStore. Only called once at startup.
+     */
+    public List<User> getFullUsers() {
+        List<User> users = new ArrayList<>();
+        String query = "SELECT id, username, password, type FROM users ORDER BY username";
+        try (Statement stmt = database.createStatement();
+             ResultSet set = stmt.executeQuery(query)) {
+            while (set.next()) {
+                users.add(new User(
+                    set.getInt("id"),
+                    set.getString("username"),
+                    set.getString("password"),
+                    set.getString("type")
+                ));
             }
-            return null;
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, e.getStackTrace(),
                     "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
-            return null;
+        }
+        return users;
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // DRUG CRUD
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Loads all drugs from the DB into Drug objects for LocalDataStore.
+     * Only called once at startup.
+     */
+    public List<Drug> getDrugs() {
+        List<Drug> drugs = new ArrayList<>();
+        String query = "SELECT id, name, type FROM drugs ORDER BY name";
+        try (Statement stmt = database.createStatement();
+             ResultSet set = stmt.executeQuery(query)) {
+            while (set.next()) {
+                drugs.add(new Drug(
+                    set.getInt("id"),
+                    set.getString("name"),
+                    set.getString("type")
+                ));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+        }
+        return drugs;
+    }
+
+    /**
+     * Inserts a new drug into the DB.
+     * Called by LocalDataStore.flushPendingToDatabase().
+     */
+    public boolean addDrug(String name, String type) {
+        String query = "INSERT INTO drugs(name, type) VALUES(?,?)";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setString(1, name);
+            exec.setString(2, type);
+            exec.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
         }
     }
 
+    // ═════════════════════════════════════════════════════════════════════════
+    // STOCK CRUD
+    // ═════════════════════════════════════════════════════════════════════════
 
+    /**
+     * Loads all kiosk_inv rows into Stock objects for LocalDataStore.
+     * Only called once at startup.
+     */
+    public List<Stock> getStocks() {
+        List<Stock> stocks = new ArrayList<>();
+        String query = "SELECT id, drug_id, sku, dosage, form, packaging, "
+                     + "orig_price, price, discount, quantity, min_stock, unit, "
+                     + "available, image_id, sup_name, last_restock, exp_date, "
+                     + "create_at, update_at FROM kiosk_inv ORDER BY id";
+        try (Statement stmt = database.createStatement();
+             ResultSet set = stmt.executeQuery(query)) {
+            while (set.next()) {
+                stocks.add(new Stock(
+                    set.getInt("id"),
+                    set.getInt("drug_id"),
+                    set.getString("sku"),
+                    set.getString("dosage"),
+                    set.getString("form"),
+                    set.getString("packaging"),
+                    set.getDouble("orig_price"),
+                    set.getDouble("price"),
+                    set.getDouble("discount"),
+                    set.getInt("quantity"),
+                    set.getInt("min_stock"),
+                    set.getString("unit"),
+                    set.getInt("available") == 1,
+                    set.getInt("image_id"),
+                    set.getString("sup_name"),
+                    set.getString("last_restock"),
+                    set.getString("exp_date"),
+                    set.getString("create_at"),
+                    set.getString("update_at")
+                ));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+        }
+        return stocks;
+    }
+
+    /**
+     * Inserts a pending Stock entry into the DB.
+     * Called by LocalDataStore.flushPendingToDatabase().
+     * @return true on success; the Stock's id field is NOT updated here
+     *         (re-load from DB if you need the generated id).
+     */
+    public boolean addStock(Stock s) {
+        String query =
+            "INSERT INTO kiosk_inv(drug_id, sku, dosage, form, packaging, "
+            + "orig_price, price, discount, quantity, min_stock, unit, "
+            + "available, image_id, sup_name, last_restock, exp_date) "
+            + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setInt(1,    s.getDrugId());
+            exec.setString(2, s.getSku());
+            exec.setString(3, s.getDosage());
+            exec.setString(4, s.getForm());
+            exec.setString(5, s.getPackaging());
+            exec.setDouble(6, s.getOrigPrice());
+            exec.setDouble(7, s.getPrice());
+            exec.setDouble(8, s.getDiscount());
+            exec.setInt(9,    s.getQuantity());
+            exec.setInt(10,   s.getMinStock());
+            exec.setString(11, s.getUnit());
+            exec.setInt(12,   s.isAvailable() ? 1 : 0);
+            exec.setInt(13,   s.getImageId());
+            exec.setString(14, s.getSupName());
+            exec.setString(15, s.getLastRestock());
+            exec.setString(16, s.getExpDate());
+            exec.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
     
-    // table creation (not used in release)
+    public boolean deleteStock(int id) {
+    String query = "DELETE FROM kiosk_inv WHERE id = ?";
+    try (PreparedStatement exec = database.prepareStatement(query)) {
+        exec.setInt(1, id);
+        int rows = exec.executeUpdate();
+        if (rows > 0) {
+            JOptionPane.showMessageDialog(null, "Stock entry deleted.",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+            return true;
+        } else {
+            JOptionPane.showMessageDialog(null, "No entry found with that ID.",
+                    "Not Found", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(null, e.getMessage(),
+                "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+        return false;
+    }
+}
+    
+    public void seedIfEmpty() {
+        String countQuery = "SELECT COUNT(*) FROM drugs";
+        try (Statement stmt = database.createStatement();
+             ResultSet rs = stmt.executeQuery(countQuery)) {
+            if (rs.next() && rs.getInt(1) == 0) {
+                System.out.println("[Database] Seeding initial drug data...");
+                String insert = "INSERT INTO drugs(name, type) VALUES(?,?)";
+                try (PreparedStatement ps = database.prepareStatement(insert)) {
+                    String[][] seeds = {
+                        {"Paracetamol",   "Analgesic"},
+                        {"Amoxicillin",   "Antibiotic"},
+                        {"Ibuprofen",     "Anti-inflammatory"},
+                        {"Cetirizine",    "Antihistamine"},
+                        {"Metformin",     "Antidiabetic"}
+                    };
+                    for (String[] s : seeds) {
+                        ps.setString(1, s[0]);
+                        ps.setString(2, s[1]);
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                    System.out.println("[Database] Seed complete.");
+                }
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getStackTrace(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+        }
+    }   
+    
+    public boolean updateUsername(String oldUsername, String newUsername) {
+        String query = "UPDATE users SET username = ? WHERE username = ?";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setString(1, newUsername);
+            exec.setString(2, oldUsername);
+            return exec.executeUpdate() > 0;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+
+    public boolean updatePassword(String username, String newPassword) {
+        String query = "UPDATE users SET password = ? WHERE username = ?";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setString(1, newPassword);
+            exec.setString(2, username);
+            return exec.executeUpdate() > 0;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+
+    public boolean updateUserType(String username, String newType) {
+        String query = "UPDATE users SET type = ? WHERE username = ?";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setString(1, newType);
+            exec.setString(2, username);
+            return exec.executeUpdate() > 0;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // TABLE CREATION  (dev only — not used in release)
+    // ═════════════════════════════════════════════════════════════════════════
+
     public void makeTable() {
         String[] queries = {
             """
@@ -115,7 +371,7 @@ public class Database{
                 type        TEXT NOT NULL
             )
             """,
-            
+
             """
             CREATE TABLE IF NOT EXISTS drugs (
                 id      INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -149,6 +405,7 @@ public class Database{
                 FOREIGN KEY (drug_id) REFERENCES drugs(id) ON DELETE RESTRICT
             )
             """,
+
             """
             CREATE TRIGGER IF NOT EXISTS trg_kiosk_upd
             AFTER UPDATE ON kiosk_inv
