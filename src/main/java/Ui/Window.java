@@ -512,7 +512,7 @@ public class Window extends javax.swing.JFrame {
 
         jList1.setBackground(new java.awt.Color(0, 102, 153));
         jList1.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED), "My Cart", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 14), new java.awt.Color(51, 51, 51))); // NOI18N
-        jList1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jList1.setFont(new java.awt.Font("Trebuchet MS", 0, 14)); // NOI18N
         jScrollPane4.setViewportView(jList1);
 
         jButton3.setBackground(new java.awt.Color(102, 255, 102));
