@@ -1,6 +1,7 @@
 package Database;
 
 import LocalData.Drug;
+import LocalData.DrugDetail;
 import LocalData.Stock;
 import LocalData.User;
 import java.sql.*;
@@ -228,6 +229,80 @@ public class Database {
         }
         return stocks;
     }
+    
+    // ═════════════════════════════════════════════════════════════════════════
+    // DRUG DETAIL  (drugs JOIN kiosk_inv)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Returns every kiosk_inv variant for a given drug name.
+     * Case-insensitive match on drugs.name.
+     *
+     * Example: getDrugDetails("Paracetamol") might return
+     *   → Paracetamol 500mg tablet  (SKU: PC-500-TAB)
+     *   → Paracetamol 250mg syrup   (SKU: PC-250-SYR)
+     */
+    public List<DrugDetail> getDrugDetails(String drugName) {
+        List<DrugDetail> results = new ArrayList<>();
+        String query =
+            "SELECT d.name, d.type, k.dosage, k.form, k.sup_name, k.price, k.sku " +
+            "FROM drugs d " +
+            "JOIN kiosk_inv k ON k.drug_id = d.id " +
+            "WHERE d.name = ? COLLATE NOCASE " +
+            "ORDER BY k.dosage, k.form";
+
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setString(1, drugName);
+            ResultSet set = exec.executeQuery();
+            while (set.next()) {
+                results.add(new DrugDetail(
+                    set.getString("name"),
+                    set.getString("type"),
+                    set.getString("dosage"),
+                    set.getString("form"),
+                    set.getString("sup_name"),
+                    set.getDouble("price"),
+                    set.getString("sku")
+                ));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+        }
+        return results;
+    }
+
+    /**
+     * Same as above but searches by SKU — always returns exactly one entry
+     * (or an empty list if not found), since SKU is UNIQUE in kiosk_inv.
+     */
+    public DrugDetail getDrugDetailBySku(String sku) {
+        String query =
+            "SELECT d.name, d.type, k.dosage, k.form, k.sup_name, k.price, k.sku " +
+            "FROM drugs d " +
+            "JOIN kiosk_inv k ON k.drug_id = d.id " +
+            "WHERE k.sku = ? COLLATE NOCASE";
+
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setString(1, sku);
+            ResultSet set = exec.executeQuery();
+            if (set.next()) {
+                return new DrugDetail(
+                    set.getString("name"),
+                    set.getString("type"),
+                    set.getString("dosage"),
+                    set.getString("form"),
+                    set.getString("sup_name"),
+                    set.getDouble("price"),
+                    set.getString("sku")
+                );
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+        }
+        return null;
+    }
 
     /**
      * Inserts a pending Stock entry into the DB.
@@ -323,6 +398,22 @@ public class Database {
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, e.getMessage(),
                     "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+    
+    /**
+    * Decrements the quantity of a kiosk_inv row by SKU.
+    * Called at checkout for each cart item.
+    */
+    public boolean updateStockQuantity(String sku, int newQuantity) {
+        String query = "UPDATE kiosk_inv SET quantity = ? WHERE sku = ? COLLATE NOCASE";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setInt(1, newQuantity);
+            exec.setString(2, sku);
+            return exec.executeUpdate() > 0;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(), "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }

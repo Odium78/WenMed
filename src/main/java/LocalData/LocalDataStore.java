@@ -248,4 +248,60 @@ public class LocalDataStore {
         }
         return false;
     }
+    
+    // ═════════════════════════════════════════════════════════════════════════
+    // DRUG DETAIL  (in-memory JOIN — no DB round-trip)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Returns every stock variant for a given drug name (case-insensitive).
+     * Mirrors Database.getDrugDetails() but uses in-memory lists.
+     *
+     * Example: getDrugDetails("Paracetamol") →
+     *   [Paracetamol 500mg tablet, Paracetamol 250mg syrup]
+     */
+    public List<DrugDetail> getDrugDetails(String drugName) {
+        List<DrugDetail> results = new ArrayList<>();
+        for (Drug d : drugs) {
+            if (!d.getName().equalsIgnoreCase(drugName)) continue;
+            for (Stock s : stocks) {
+                if (s.getDrugId() == d.getId()) {
+                    results.add(new DrugDetail(
+                        d.getName(),
+                        d.getType(),
+                        s.getDosage(),
+                        s.getForm(),
+                        s.getSupName(),
+                        s.getPrice(),
+                        s.getSku()
+                    ));
+                }
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Looks up a single drug variant by SKU (case-insensitive).
+     * Returns null if not found.
+     */
+    public DrugDetail getDrugDetailBySku(String sku) {
+        for (Stock s : stocks) {
+            if (!s.getSku().equalsIgnoreCase(sku)) continue;
+            for (Drug d : drugs) {
+                if (d.getId() == s.getDrugId()) {
+                    return new DrugDetail(
+                        d.getName(),
+                        d.getType(),
+                        s.getDosage(),
+                        s.getForm(),
+                        s.getSupName(),
+                        s.getPrice(),
+                        s.getSku()
+                    );
+                }
+            }
+        }
+        return null;
+    }
 }

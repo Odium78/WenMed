@@ -12,6 +12,11 @@ import LocalData.LocalDataStore;
 import LocalData.Drug;
 import LocalData.User;
 import LocalData.Stock;
+import LocalData.DrugDetail;
+import javax.swing.JFormattedTextField;
+import javax.swing.JSpinner;
+import javax.swing.text.NumberFormatter;
+import Ui.Cart;
 
 
 /**
@@ -29,6 +34,9 @@ public class Window extends javax.swing.JFrame {
     
     private static final int TAB_STOCK = 0;
     private static final int TAB_ACCOUNT = 1;
+    private double currentUnitPrice = 0.0;
+    
+    private final java.util.ArrayList<Cart> cartItems = new java.util.ArrayList<>();
 
     /**
      * Creates new form Window
@@ -72,6 +80,7 @@ public class Window extends javax.swing.JFrame {
         jButton15 = new javax.swing.JButton();
         jTextField4 = new javax.swing.JTextField();
         jButton7 = new javax.swing.JButton();
+        jButton20 = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
@@ -81,6 +90,7 @@ public class Window extends javax.swing.JFrame {
         jButton12 = new javax.swing.JButton();
         jTextField5 = new javax.swing.JTextField();
         jButton16 = new javax.swing.JButton();
+        jPanel9 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         jPanel5 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
@@ -92,6 +102,7 @@ public class Window extends javax.swing.JFrame {
         jButton3 = new javax.swing.JButton();
         jTextField2 = new javax.swing.JTextField();
         jButton4 = new javax.swing.JButton();
+        jLabel10 = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
         jButton5 = new javax.swing.JButton();
         jButton6 = new javax.swing.JButton();
@@ -117,7 +128,6 @@ public class Window extends javax.swing.JFrame {
         jComboBox1 = new javax.swing.JComboBox<>();
         jLabel19 = new javax.swing.JLabel();
         jSpinner1 = new javax.swing.JSpinner();
-        jLabel10 = new javax.swing.JLabel();
         jLabel11 = new javax.swing.JLabel();
         jButton18 = new javax.swing.JButton();
 
@@ -249,8 +259,8 @@ public class Window extends javax.swing.JFrame {
         jButton11.setToolTipText("");
         jButton11.addActionListener(this::jButton11ActionPerformed);
 
-        jButton13.setText("Add Item");
-        jButton13.setToolTipText("");
+        jButton13.setText("Add Item Type");
+        jButton13.setToolTipText("Add New Type of the Item");
         jButton13.addActionListener(this::jButton13ActionPerformed);
 
         jButton14.setText("Edit Item");
@@ -268,6 +278,10 @@ public class Window extends javax.swing.JFrame {
         jButton7.setText("Find..");
         jButton7.addActionListener(this::jButton7ActionPerformed);
 
+        jButton20.setText("New Item");
+        jButton20.setToolTipText("Add a New Item");
+        jButton20.addActionListener(this::jButton20ActionPerformed);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -284,10 +298,11 @@ public class Window extends javax.swing.JFrame {
                         .addComponent(jScrollPane2)
                         .addGap(18, 18, 18)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jButton14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jButton15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jButton11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jButton13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton14, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)
-                            .addComponent(jButton15, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)
-                            .addComponent(jButton11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(jButton20, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGap(35, 35, 35))))
         );
         jPanel2Layout.setVerticalGroup(
@@ -297,12 +312,14 @@ public class Window extends javax.swing.JFrame {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 511, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jButton20, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(36, 36, 36)
                         .addComponent(jButton13, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(29, 29, 29)
+                        .addGap(28, 28, 28)
                         .addComponent(jButton14, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(29, 29, 29)
                         .addComponent(jButton15, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(127, 127, 127)
+                        .addGap(57, 57, 57)
                         .addComponent(jButton11, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -405,6 +422,21 @@ public class Window extends javax.swing.JFrame {
 
         jTabbedPane2.addTab("Account Manager", jPanel4);
 
+        jPanel9.setBackground(new java.awt.Color(245, 245, 239));
+
+        javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
+        jPanel9.setLayout(jPanel9Layout);
+        jPanel9Layout.setHorizontalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1042, Short.MAX_VALUE)
+        );
+        jPanel9Layout.setVerticalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 589, Short.MAX_VALUE)
+        );
+
+        jTabbedPane2.addTab("Audit Logs", jPanel9);
+
         getContentPane().add(jTabbedPane2, "card3");
 
         jPanel3.setBackground(new java.awt.Color(245, 245, 239));
@@ -503,6 +535,11 @@ public class Window extends javax.swing.JFrame {
         jButton4.setToolTipText("Search");
         jButton4.addActionListener(this::jButton4ActionPerformed);
 
+        jLabel10.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(0, 153, 51));
+        jLabel10.setText("Total:");
+        jLabel10.setToolTipText("Total Price");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -520,12 +557,15 @@ public class Window extends javax.swing.JFrame {
                         .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)))
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(34, 34, 34))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 259, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap())
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(34, 34, 34))))
+                        .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 242, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(17, 17, 17))))
             .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
@@ -541,8 +581,10 @@ public class Window extends javax.swing.JFrame {
                             .addComponent(jTextField2)
                             .addComponent(jButton4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 431, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 399, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(27, Short.MAX_VALUE))
         );
@@ -720,18 +762,17 @@ public class Window extends javax.swing.JFrame {
         jLabel18.setForeground(new java.awt.Color(51, 51, 51));
         jLabel18.setText("Type:");
 
+        jComboBox1.addActionListener(this::jComboBox1ActionPerformed);
+
         jLabel19.setFont(new java.awt.Font("Segoe UI", 3, 24)); // NOI18N
         jLabel19.setForeground(new java.awt.Color(51, 51, 51));
         jLabel19.setText("Quantity:");
 
         jSpinner1.setModel(new javax.swing.SpinnerNumberModel(1, 1, 100, 1));
-
-        jLabel10.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        jLabel10.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel10.setText("Price:");
+        jSpinner1.addChangeListener(this::jSpinner1StateChanged);
 
         jLabel11.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        jLabel11.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel11.setForeground(new java.awt.Color(0, 153, 51));
         jLabel11.setText("{Price}");
 
         jButton18.setBackground(new java.awt.Color(102, 255, 102));
@@ -739,6 +780,7 @@ public class Window extends javax.swing.JFrame {
         jButton18.setForeground(new java.awt.Color(51, 51, 51));
         jButton18.setText("Add To Cart..");
         jButton18.setToolTipText("Add To Cart..");
+        jButton18.addActionListener(this::jButton18ActionPerformed);
 
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
@@ -749,7 +791,7 @@ public class Window extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel7Layout.createSequentialGroup()
-                        .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel7Layout.createSequentialGroup()
@@ -761,18 +803,15 @@ public class Window extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 306, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel7Layout.createSequentialGroup()
-                                .addComponent(jLabel18)
-                                .addGap(18, 18, 18)
-                                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel7Layout.createSequentialGroup()
-                                .addComponent(jLabel10)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel7Layout.createSequentialGroup()
                                 .addComponent(jLabel19)
                                 .addGap(18, 18, 18)
-                                .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel7Layout.createSequentialGroup()
+                                    .addComponent(jLabel18)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(jLabel11, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jButton18, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel7Layout.createSequentialGroup()
                                     .addComponent(jLabel16, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -813,10 +852,8 @@ public class Window extends javax.swing.JFrame {
                             .addGroup(jPanel7Layout.createSequentialGroup()
                                 .addComponent(jSpinner1)
                                 .addGap(2, 2, 2)))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, 45, Short.MAX_VALUE)
-                            .addComponent(jLabel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jButton18, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -879,7 +916,7 @@ public class Window extends javax.swing.JFrame {
         if (userType == null) {
             JOptionPane.showMessageDialog(
                 this,
-                "• Invalid username or password.",
+                "Invalid username or password.",
                 "Login Failed",
                 JOptionPane.ERROR_MESSAGE
             );
@@ -1104,7 +1141,38 @@ public class Window extends javax.swing.JFrame {
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
-        searchStoreTable();
+        if (cartItems.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Your cart is empty!", "Checkout", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // ── Deduct stock for every cart item ─────────────────────────────────
+        for (Cart item : cartItems) {
+            // Find the matching Stock in the local store
+            for (Stock s : store.getStocks()) {
+                if (s.getSku().equalsIgnoreCase(item.getSku())) {
+                    int newQty = s.getQuantity() - item.getQuantity();
+                    // Update DB
+                    database.updateStockQuantity(item.getSku(), newQty);
+                    // Update local cache so the store table reflects it
+                    s.setQuantity(newQty);
+                    break;
+                }
+            }
+        }
+
+        // ── Clear cart ────────────────────────────────────────────────────────
+        cartItems.clear();
+        refreshCartList();
+
+        // ── Reload tables so stock counts are up to date ──────────────────────
+        loadStockTable();
+        loadDrugTable();
+
+        JOptionPane.showMessageDialog(this,
+                "Thank You for using WenMed Kiosk!\nSeek at the counter to process payment!",
+                "Checkout Complete", JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
@@ -1314,16 +1382,194 @@ public class Window extends javax.swing.JFrame {
 
     private void onDoubleClick(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_onDoubleClick
         // TODO add your handling code here:
-        if (evt.getClickCount() == 2){
-            System.out.println("hi");
-            layout.show(getContentPane(), "card6");
-        }
+        if (evt.getClickCount() != 2) return;
+        
+        int row = jTable3.getSelectedRow();
+        if (row == -1) return;
+
+        String drugName = (String) jTable3.getValueAt(row, 0);
+        loadProductInfo(drugName);
+        layout.show(getContentPane(), "card6");
     }//GEN-LAST:event_onDoubleClick
 
     private void jButton19ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton19ActionPerformed
         // TODO add your handling code here:
         layout.show(getContentPane(), "card4");
     }//GEN-LAST:event_jButton19ActionPerformed
+
+    private void jSpinner1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSpinner1StateChanged
+        // TODO add your handling code here:
+        int qty = (int) jSpinner1.getValue();
+        jLabel11.setText(String.format("₱ %.2f", currentUnitPrice * qty));
+    }//GEN-LAST:event_jSpinner1StateChanged
+
+    private void jButton18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton18ActionPerformed
+        // TODO add your handling code here:
+        String name = jLabel6.getText();
+        String sku  = jLabel13.getText();
+        int    qty  = (int) jSpinner1.getValue();
+
+        if (name.isBlank() || sku.isBlank()) return;
+
+        // If the same SKU is already in the cart, merge quantities
+        for (Cart existing : cartItems) {
+            if (existing.getSku().equalsIgnoreCase(sku)) {
+                cartItems.remove(existing);
+                qty = Math.min(existing.getQuantity() + qty,
+                        ((javax.swing.SpinnerNumberModel) jSpinner1.getModel())
+                                .getNumber().intValue());
+                break;
+            }
+        }
+
+        cartItems.add(new Cart(name, sku, qty, currentUnitPrice));
+        refreshCartList();
+
+        // Go back to the store so the customer can keep shopping
+        layout.show(getContentPane(), "card4");
+    }//GEN-LAST:event_jButton18ActionPerformed
+
+    private void jButton20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton20ActionPerformed
+        // TODO add your handling code here:
+        // ── STEP 1: New drug name + type ──────────────────────────────────────
+        // ── STEP 1: New drug name + type ──────────────────────────────────────
+        javax.swing.JTextField drugNameField = new javax.swing.JTextField();
+        javax.swing.JTextField drugTypeField = new javax.swing.JTextField();
+
+        int step1 = JOptionPane.showConfirmDialog(
+                this,
+                new Object[]{ "Drug Name:", drugNameField, "Generic Name:", drugTypeField },
+                "New Drug: Step 1 of 2",
+                JOptionPane.OK_CANCEL_OPTION);
+        if (step1 != JOptionPane.OK_OPTION) return;
+
+        String newDrugName = drugNameField.getText().trim();
+        String newDrugType = drugTypeField.getText().trim(); // was: (String) drugTypeCombo.getSelectedItem()
+
+        if (newDrugName.isEmpty() || newDrugType.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Drug name and generic type cannot be empty.", "Validation Error",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Duplicate check — tell the user to use jButton13 instead
+        for (Drug existing : store.getDrugs()) {
+            if (existing.getName().equalsIgnoreCase(newDrugName)) {
+                JOptionPane.showMessageDialog(this,
+                        "\"" + newDrugName + "\" already exists in the system.\n"
+                        + "Use \"Add New Item\" to add a new variant for it instead.",
+                        "Duplicate Drug", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        }
+
+        // ── STEP 2: First stock entry for this brand-new drug ─────────────────
+        javax.swing.JTextField skuField       = new javax.swing.JTextField();
+        javax.swing.JTextField dosageField    = new javax.swing.JTextField();
+        javax.swing.JTextField formField      = new javax.swing.JTextField();
+        javax.swing.JTextField packField      = new javax.swing.JTextField();
+        javax.swing.JTextField origPriceField = new javax.swing.JTextField();
+        javax.swing.JTextField priceField     = new javax.swing.JTextField();
+        javax.swing.JTextField discountField  = new javax.swing.JTextField("0");
+        javax.swing.JTextField qtyField       = new javax.swing.JTextField();
+        javax.swing.JTextField minStockField  = new javax.swing.JTextField("10");
+        javax.swing.JTextField unitField      = new javax.swing.JTextField("pcs");
+        javax.swing.JTextField supField       = new javax.swing.JTextField();
+        javax.swing.JTextField restockField   = new javax.swing.JTextField(
+                new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()));
+        javax.swing.JTextField expField       = new javax.swing.JTextField();
+
+        Object[] step2Fields = {
+            "SKU:",          skuField,
+            "Dosage:",       dosageField,
+            "Form:",         formField,
+            "Packaging:",    packField,
+            "Orig Price:",   origPriceField,
+            "Sell Price:",   priceField,
+            "Discount:",     discountField,
+            "Quantity:",     qtyField,
+            "Min Stock:",    minStockField,
+            "Unit:",         unitField,
+            "Supplier:",     supField,
+            "Last Restock:", restockField,
+            "Expiry Date:",  expField,
+        };
+
+        int step2 = JOptionPane.showConfirmDialog(
+                this, step2Fields,
+                "New Drug: Step 2 of 2: First Stock Entry for \"" + newDrugName + "\"",
+                JOptionPane.OK_CANCEL_OPTION);
+        if (step2 != JOptionPane.OK_OPTION) return;
+
+        try {
+            String sku       = skuField.getText().trim();
+            String dosage    = dosageField.getText().trim();
+            String form      = formField.getText().trim();
+            String pack      = packField.getText().trim();
+            double origPrice = Double.parseDouble(origPriceField.getText().trim());
+            double price     = Double.parseDouble(priceField.getText().trim());
+            double discount  = Double.parseDouble(discountField.getText().trim());
+            int    qty       = Integer.parseInt(qtyField.getText().trim());
+            int    minStock  = Integer.parseInt(minStockField.getText().trim());
+            String unit      = unitField.getText().trim();
+            String sup       = supField.getText().trim();
+            String restock   = restockField.getText().trim();
+            String exp       = expField.getText().trim();
+
+            if (sku.isEmpty() || sup.isEmpty() || exp.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "SKU, Supplier, and Expiry Date are required.",
+                        "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // ── Insert the drug row first ─────────────────────────────────────
+            boolean drugOk = database.addDrug(newDrugName, newDrugType);
+            if (!drugOk) return;  // database.addDrug already shows an error dialog
+
+            // Reload so we can find the auto-generated drug ID
+            store.loadAll(database);
+
+            int newDrugId = -1;
+            for (Drug d : store.getDrugs()) {
+                if (d.getName().equalsIgnoreCase(newDrugName)) {
+                    newDrugId = d.getId();
+                    break;
+                }
+            }
+
+            if (newDrugId == -1) {
+                JOptionPane.showMessageDialog(this,
+                        "Drug was saved but its ID could not be resolved. Please restart.",
+                        "Internal Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // ── Insert the first stock entry pointing to the new drug ─────────
+            Stock newStock = new Stock(newDrugId, sku, dosage, form, pack,
+                    origPrice, price, discount, qty, minStock, unit,
+                    true, 0, sup, restock, exp);
+
+            if (database.addStock(newStock)) {
+                store.loadAll(database);   // sync local cache with real DB IDs
+                loadStockTable();
+                loadDrugTable();
+                JOptionPane.showMessageDialog(this,
+                        "\"" + newDrugName + "\" and its first stock entry added successfully.",
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Please enter valid numbers for price, quantity, and discount.",
+                    "Input Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_jButton20ActionPerformed
+
+    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jComboBox1ActionPerformed
     
     private void initSettings(){
         setLocationRelativeTo(null);
@@ -1331,7 +1577,49 @@ public class Window extends javax.swing.JFrame {
         setVisible(true);
         
         layout = (CardLayout) getContentPane().getLayout();
+        
+        configureSpinner();
     }
+    
+    private void configureSpinner() {
+        JSpinner.NumberEditor editor = new JSpinner.NumberEditor(jSpinner1, "#");
+        jSpinner1.setEditor(editor);
+
+        JFormattedTextField tf = editor.getTextField();
+        tf.setHorizontalAlignment(JFormattedTextField.CENTER);
+
+        // Allow only digit characters to be typed
+        tf.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+             public void keyTyped(java.awt.event.KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!Character.isDigit(c)) {
+                    e.consume(); // block everything except digits
+                }
+            }
+        });
+
+        // When focus leaves the field, clamp and commit the value
+        tf.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+             public void focusLost(java.awt.event.FocusEvent e) {
+                try {
+                    jSpinner1.commitEdit();
+                } catch (java.text.ParseException ex) {
+                    // Revert to last valid value
+                    jSpinner1.setValue(jSpinner1.getValue());
+                }
+                // Clamp to [min, max]
+                javax.swing.SpinnerNumberModel m =
+                        (javax.swing.SpinnerNumberModel) jSpinner1.getModel();
+                int val = (int) jSpinner1.getValue();
+                int min = ((Number) m.getMinimum()).intValue();
+                int max = ((Number) m.getMaximum()).intValue();
+                if (val < min) jSpinner1.setValue(min);
+                if (val > max) jSpinner1.setValue(max);
+            }
+        });
+   }
     
     
     private void applyPermissions(String userType) {
@@ -1533,6 +1821,83 @@ public class Window extends javax.swing.JFrame {
             loadDrugTable();
         }
     }
+    
+    /**
+     * Populates jPanel7 (card6) with the details of the selected drug.
+     *
+     * jComboBox1  — one entry per kiosk_inv variant (dosage + form)
+     * jLabel6     — drug name
+     * jLabel9     — supplier
+     * jLabel17    — dosage
+     * jLabel11    — price
+     * jLabel13    — SKU
+     */
+    private void loadProductInfo(String drugName) {
+        java.util.List<LocalData.DrugDetail> variants = store.getDrugDetails(drugName);
+
+        if (variants == null || variants.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No stock details found for: " + drugName,
+                    "Not Found", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // ── Populate the variant combo ────────────────────────────────────────
+        jComboBox1.removeAllItems();
+        for (LocalData.DrugDetail d : variants) {
+            jComboBox1.addItem(d.getDosage() + " — " + d.getForm());
+        }
+
+        // ── Fill labels from the first variant ───────────────────────────────
+        fillProductLabels(variants.get(0));
+
+        // ── Swap labels when user picks a different variant ───────────────────
+        // Remove old listeners first to avoid stacking them on repeated opens
+        for (java.awt.event.ActionListener al : jComboBox1.getActionListeners()) {
+            jComboBox1.removeActionListener(al);
+        }
+        
+        jComboBox1.addActionListener(e -> {
+            int idx = jComboBox1.getSelectedIndex();
+            if (idx >= 0 && idx < variants.size()) {
+                fillProductLabels(variants.get(idx));
+            }
+        });
+    }
+
+    private void fillProductLabels(LocalData.DrugDetail d) {
+        jLabel6.setText(d.getName());
+        jLabel9.setText(d.getSupName());
+        jLabel17.setText(d.getDosage());
+        jLabel13.setText(d.getSku());
+
+        // Find stock quantity ceiling
+        int maxQty = 1;
+        for (Stock s : store.getStocks()) {
+            if (s.getSku().equalsIgnoreCase(d.getSku())) {
+                maxQty = Math.max(1, s.getQuantity());
+                break;
+            }
+        }
+        
+        currentUnitPrice = d.getPrice();
+        javax.swing.SpinnerNumberModel model = (javax.swing.SpinnerNumberModel) jSpinner1.getModel();
+        model.setMaximum(maxQty);
+        model.setMinimum(1);
+        model.setValue(1);
+    }
+    
+    /** Syncs the cartItems list into jList1 for display. */
+    private void refreshCartList() {
+        javax.swing.DefaultListModel<String> model = new javax.swing.DefaultListModel<>();
+        double grandTotal = 0.0;
+        for (Cart item : cartItems) {
+            model.addElement(item.toString());
+            grandTotal += item.getTotal();
+        }
+        jList1.setModel(model);
+        jLabel10.setText(String.format("Total: ₱%.2f", grandTotal));
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
@@ -1547,6 +1912,7 @@ public class Window extends javax.swing.JFrame {
     private javax.swing.JButton jButton18;
     private javax.swing.JButton jButton19;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton20;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
@@ -1582,6 +1948,7 @@ public class Window extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
+    private javax.swing.JPanel jPanel9;
     private javax.swing.JPasswordField jPasswordField1;
     private javax.swing.JPasswordField jPasswordField2;
     private javax.swing.JScrollPane jScrollPane1;
