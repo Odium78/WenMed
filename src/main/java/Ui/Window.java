@@ -1278,7 +1278,110 @@ public class Window extends javax.swing.JFrame {
 
     private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
         // TODO add your handling code here:
+        int selectedRow = jTable2.getSelectedRow();
         
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a stock item to edit.",
+                    "No Selection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Pull the stock ID from the table, then find the full Stock object
+        // from the local store so every field (including ones not shown in the
+        // table like orig_price, discount, min_stock, unit) can be pre-filled.
+        int stockId = (int) jTable2.getValueAt(selectedRow, 0);
+        Stock target = null;
+        for (Stock s : store.getStocks()) {
+            if (s.getId() == stockId) { target = s; break; }
+        }
+        if (target == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Could not find stock entry in local cache.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // ── Pre-filled fields ─────────────────────────────────────────────────
+        javax.swing.JTextField skuField       = new javax.swing.JTextField(target.getSku());
+        javax.swing.JTextField dosageField    = new javax.swing.JTextField(target.getDosage());
+        javax.swing.JTextField formField      = new javax.swing.JTextField(target.getForm());
+        javax.swing.JTextField packField      = new javax.swing.JTextField(target.getPackaging());
+        javax.swing.JTextField origPriceField = new javax.swing.JTextField(String.valueOf(target.getOrigPrice()));
+        javax.swing.JTextField priceField     = new javax.swing.JTextField(String.valueOf(target.getPrice()));
+        javax.swing.JTextField discountField  = new javax.swing.JTextField(String.valueOf(target.getDiscount()));
+        javax.swing.JTextField qtyField       = new javax.swing.JTextField(String.valueOf(target.getQuantity()));
+        javax.swing.JTextField minStockField  = new javax.swing.JTextField(String.valueOf(target.getMinStock()));
+        javax.swing.JTextField unitField      = new javax.swing.JTextField(target.getUnit());
+        javax.swing.JComboBox<String> availCombo = new javax.swing.JComboBox<>(new String[]{"Available", "Unavailable"});
+        availCombo.setSelectedItem(target.isAvailable() ? "Available" : "Unavailable");
+        javax.swing.JTextField supField       = new javax.swing.JTextField(target.getSupName());
+        javax.swing.JTextField restockField   = new javax.swing.JTextField(target.getLastRestock());
+        javax.swing.JTextField expField       = new javax.swing.JTextField(target.getExpDate());
+
+        Object[] fields = {
+            "SKU:",          skuField,
+            "Dosage:",       dosageField,
+            "Form:",         formField,
+            "Packaging:",    packField,
+            "Orig Price:",   origPriceField,
+            "Sell Price:",   priceField,
+            "Discount:",     discountField,
+            "Quantity:",     qtyField,
+            "Min Stock:",    minStockField,
+            "Unit:",         unitField,
+            "Status:",       availCombo,
+            "Supplier:",     supField,
+            "Last Restock:", restockField,
+            "Expiry Date:",  expField,
+        };
+
+        int result = JOptionPane.showConfirmDialog(
+                this, fields,
+                "Edit Stock Item (ID: " + stockId + ")",
+                JOptionPane.OK_CANCEL_OPTION);
+        if (result != JOptionPane.OK_OPTION) return;
+
+        try {
+            String sku       = skuField.getText().trim();
+            String dosage    = dosageField.getText().trim();
+            String form      = formField.getText().trim();
+            String pack      = packField.getText().trim();
+            double origPrice = Double.parseDouble(origPriceField.getText().trim());
+            double price     = Double.parseDouble(priceField.getText().trim());
+            double discount  = Double.parseDouble(discountField.getText().trim());
+            int    qty       = Integer.parseInt(qtyField.getText().trim());
+            int    minStock  = Integer.parseInt(minStockField.getText().trim());
+            String unit      = unitField.getText().trim();
+            boolean available = "Available".equals(availCombo.getSelectedItem());
+            String sup       = supField.getText().trim();
+            String restock   = restockField.getText().trim();
+            String exp       = expField.getText().trim();
+
+            if (sku.isEmpty() || sup.isEmpty() || exp.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "SKU, Supplier, and Expiry Date are required.",
+                        "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            boolean ok = database.updateStock(stockId, sku, dosage, form, pack,
+                    origPrice, price, discount, qty, minStock, unit,
+                    available, sup, restock, exp);
+
+            if (ok) {
+                store.loadAll(database);  // sync local cache
+                loadStockTable();
+                JOptionPane.showMessageDialog(this,
+                        "Stock item updated successfully.",
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Please enter valid numbers for price, quantity, and discount.",
+                    "Input Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_jButton14ActionPerformed
 
     private void jButton15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton15ActionPerformed

@@ -417,6 +417,40 @@ public class Database {
             return false;
         }
     }
+    
+    public boolean updateStock(int id, String sku, String dosage, String form,
+                           String packaging, double origPrice, double price,
+                           double discount, int quantity, int minStock,
+                           String unit, boolean available, String supName,
+                           String lastRestock, String expDate) {
+        String query =
+            "UPDATE kiosk_inv SET sku=?, dosage=?, form=?, packaging=?, " +
+            "orig_price=?, price=?, discount=?, quantity=?, min_stock=?, " +
+            "unit=?, available=?, sup_name=?, last_restock=?, exp_date=? " +
+            "WHERE id=?";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setString(1,  sku);
+            exec.setString(2,  dosage);
+            exec.setString(3,  form);
+            exec.setString(4,  packaging);
+            exec.setDouble(5,  origPrice);
+            exec.setDouble(6,  price);
+            exec.setDouble(7,  discount);
+            exec.setInt(8,     quantity);
+            exec.setInt(9,     minStock);
+            exec.setString(10, unit);
+            exec.setInt(11,    available ? 1 : 0);
+            exec.setString(12, supName);
+            exec.setString(13, lastRestock);
+            exec.setString(14, expDate);
+            exec.setInt(15,    id);
+            return exec.executeUpdate() > 0;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
 
     // ═════════════════════════════════════════════════════════════════════════
     // TABLE CREATION  (dev only — not used in release)
