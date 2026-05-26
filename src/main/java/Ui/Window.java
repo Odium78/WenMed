@@ -17,6 +17,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JSpinner;
 import javax.swing.text.NumberFormatter;
 import Ui.Cart;
+import Ui.Audit;
 
 
 /**
@@ -95,11 +96,8 @@ public class Window extends javax.swing.JFrame {
         jButton22 = new javax.swing.JButton();
         jScrollPane5 = new javax.swing.JScrollPane();
         jTable4 = new javax.swing.JTable();
-        jScrollPane6 = new javax.swing.JScrollPane();
-        jList2 = new javax.swing.JList<>();
         jLabel12 = new javax.swing.JLabel();
         jLabel15 = new javax.swing.JLabel();
-        jLabel20 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         jPanel5 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
@@ -444,14 +442,14 @@ public class Window extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Message", "Date"
+                "Date", "Event", "Message"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false
+                false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -462,9 +460,11 @@ public class Window extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
+        jTable4.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
         jScrollPane5.setViewportView(jTable4);
-
-        jScrollPane6.setViewportView(jList2);
+        if (jTable4.getColumnModel().getColumnCount() > 0) {
+            jTable4.getColumnModel().getColumn(1).setResizable(false);
+        }
 
         jLabel12.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel12.setForeground(new java.awt.Color(51, 51, 51));
@@ -473,10 +473,6 @@ public class Window extends javax.swing.JFrame {
         jLabel15.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel15.setForeground(new java.awt.Color(51, 51, 51));
         jLabel15.setText("Stock Alerts");
-
-        jLabel20.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel20.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel20.setText("Item Trends");
 
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
         jPanel9.setLayout(jPanel9Layout);
@@ -487,19 +483,12 @@ public class Window extends javax.swing.JFrame {
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jButton22, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jButton22))
+                    .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 1030, Short.MAX_VALUE)
                     .addGroup(jPanel9Layout.createSequentialGroup()
-                        .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 575, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 449, Short.MAX_VALUE)
-                            .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel15)
-                                    .addComponent(jLabel20))
-                                .addGap(0, 0, Short.MAX_VALUE))))
-                    .addGroup(jPanel9Layout.createSequentialGroup()
-                        .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel15))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -507,18 +496,13 @@ public class Window extends javax.swing.JFrame {
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
                 .addGap(4, 4, 4)
-                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel12)
-                    .addComponent(jLabel15))
+                .addComponent(jLabel12)
                 .addGap(8, 8, 8)
-                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel9Layout.createSequentialGroup()
-                        .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel20)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 74, Short.MAX_VALUE)
-                .addComponent(jButton22, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel15)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 200, Short.MAX_VALUE)
+                .addComponent(jButton22, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -1001,6 +985,7 @@ public class Window extends javax.swing.JFrame {
         String userType = store.getUserType(username, password);
  
         if (userType == null) {
+            Audit.log("LOGIN", "Failed login attempt for username: '" + username + "'.");
             JOptionPane.showMessageDialog(
                 this,
                 "Invalid username or password.",
@@ -1011,6 +996,9 @@ public class Window extends javax.swing.JFrame {
             return;
         }
         currentUserType = userType;
+        
+        Audit.log("LOGIN", "Employee '" + username + "' logged in successfully. Role: " + userType + ".");
+        
         applyPermissions(userType);
         loadUserTable();
         
@@ -1106,6 +1094,10 @@ public class Window extends javax.swing.JFrame {
         }
 
         if (updated) {
+            Audit.log("ACCOUNT", "Account updated Username: '" + currentUsername + "'"
+                + (!newUsername.equals(currentUsername) ? " to '" + newUsername + "'" : "")
+                + (!newType.equals(currentType) ? ", Role: " + currentType + " to " + newType : "")
+                + (!newPassword.isEmpty() ? ", password changed." : "."));
             loadUserTable();
             JOptionPane.showMessageDialog(this,
                     "User updated successfully.", "Success",
@@ -1142,12 +1134,12 @@ public class Window extends javax.swing.JFrame {
         java.util.List<String> errors = new java.util.ArrayList<>();
  
         if (newUsername.isEmpty()) {
-            errors.add("• Username cannot be empty.");
+            errors.add("Username cannot be empty.");
         }
         if (newPassword.isEmpty()) {
-            errors.add("• Password cannot be empty.");
+            errors.add("Password cannot be empty.");
         } else if (newPassword.length() < 8) {
-            errors.add("• Password must be at least 8 characters long.");
+            errors.add("Password must be at least 8 characters long.");
         }
  
         if (!errors.isEmpty()) {
@@ -1161,11 +1153,10 @@ public class Window extends javax.swing.JFrame {
         }
         
         boolean created = database.addUser(newUsername, newPassword, newType);
+        Audit.log("ACCOUNT", "New account created — Username: '" + newUsername + "', Role: " + newType + ".");
+        
         if (created) {
             loadUserTable(); // refresh the Account Manager table
- 
-            // If a logged-in employee registered the user, go back to the
-            // dashboard; otherwise return to the login screen.
             if (currentUserType != null) {
                 layout.show(getContentPane(), "card3");
             } else {
@@ -1214,7 +1205,8 @@ public class Window extends javax.swing.JFrame {
  
         if (confirm == JOptionPane.YES_OPTION) {
             if (database.deleteUser(targetUsername)) {
-                // Remove the row directly from the table model
+                Audit.log("ACCOUNT", "Account deleted — Username: '" + targetUsername + "' removed by " + currentUserType + ".");
+                // remove the row
                 ((javax.swing.table.DefaultTableModel) jTable1.getModel())
                         .removeRow(selectedRow);
             }
@@ -1234,8 +1226,14 @@ public class Window extends javax.swing.JFrame {
             return;
         }
 
-        // ── Deduct stock for every cart item ─────────────────────────────────
+        // remove stock
+        StringBuilder checkoutSummary = new StringBuilder();
+        double checkoutTotal = 0.0;
         for (Cart item : cartItems) {
+            checkoutSummary.append(item.getName())
+                    .append("[").append(item.getSku()).append("] x")
+                    .append(item.getQuantity()).append(", ");
+            checkoutTotal += item.getTotal();
             // Find the matching Stock in the local store
             for (Stock s : store.getStocks()) {
                 if (s.getSku().equalsIgnoreCase(item.getSku())) {
@@ -1249,7 +1247,12 @@ public class Window extends javax.swing.JFrame {
             }
         }
 
-        // ── Clear cart ────────────────────────────────────────────────────────
+        // clear cart
+        if (checkoutSummary.length() > 2)
+            checkoutSummary.setLength(checkoutSummary.length() - 2);
+        Audit.log("CHECKOUT", String.format(
+                "Customer checkout - %d item(s), Total: ₱%.2f. Items: %s",
+                cartItems.size(), checkoutTotal, checkoutSummary.toString()));
         cartItems.clear();
         refreshCartList();
 
@@ -1268,6 +1271,7 @@ public class Window extends javax.swing.JFrame {
         jTextField1.setText("");
         jPasswordField1.setText("");
         layout.show(getContentPane(), "card2");
+        Audit.log("LOGOUT", "Employee logged out from the dashboard.");
     }//GEN-LAST:event_jButton11ActionPerformed
 
     private void jButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton12ActionPerformed
@@ -1276,6 +1280,7 @@ public class Window extends javax.swing.JFrame {
         jTextField1.setText("");
         jPasswordField1.setText("");
         layout.show(getContentPane(), "card2");
+        Audit.log("LOGOUT", "Employee logged out from the account manager.");
     }//GEN-LAST:event_jButton12ActionPerformed
 
     private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
@@ -1283,7 +1288,7 @@ public class Window extends javax.swing.JFrame {
         java.util.List<Drug> drugList = new java.util.ArrayList<>(store.getDrugs());
         String[] drugNames = drugList.stream().map(Drug::getName).toArray(String[]::new);
 
-        // Input fields
+        // input fields
         javax.swing.JComboBox<String> drugCombo = new javax.swing.JComboBox<>(drugNames);
         javax.swing.JTextField skuField      = new javax.swing.JTextField();
         javax.swing.JTextField dosageField   = new javax.swing.JTextField();
@@ -1350,9 +1355,12 @@ public class Window extends javax.swing.JFrame {
                     true, 0, sup, restock, exp);
 
             if (database.addStock(newStock)) {
-                // Reload from DB so we get the real auto-generated ID
+                // reload from DB
                 store.loadAll(database);
                 loadStockTable();
+                Audit.log("STOCK", String.format(
+                    "New stock variant added — Drug: '%s', SKU: %s, Dosage: %s %s, Qty: %d, Price: ₱%.2f, Supplier: %s.",
+                    drugList.get(selectedDrugIdx).getName(), sku, dosage, form, qty, price, sup));
                 JOptionPane.showMessageDialog(this, "Stock item added successfully.",
                         "Success", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -1367,16 +1375,13 @@ public class Window extends javax.swing.JFrame {
         // TODO add your handling code here:
         int selectedRow = jTable2.getSelectedRow();
         
-        if (selectedRow == -1) {
+        if (selectedRow == -1) {    
             JOptionPane.showMessageDialog(this,
                     "Please select a stock item to edit.",
                     "No Selection", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Pull the stock ID from the table, then find the full Stock object
-        // from the local store so every field (including ones not shown in the
-        // table like orig_price, discount, min_stock, unit) can be pre-filled.
         int stockId = (int) jTable2.getValueAt(selectedRow, 0);
         Stock target = null;
         for (Stock s : store.getStocks()) {
@@ -1452,13 +1457,16 @@ public class Window extends javax.swing.JFrame {
                 return;
             }
 
-            boolean ok = database.updateStock(stockId, sku, dosage, form, pack,
+            boolean done = database.updateStock(stockId, sku, dosage, form, pack,
                     origPrice, price, discount, qty, minStock, unit,
                     available, sup, restock, exp);
 
-            if (ok) {
+            if (done) {
                 store.loadAll(database);  // sync local cache
                 loadStockTable();
+                Audit.log("STOCK", String.format(
+                    "Stock item edited - ID: %d, SKU: %s, Qty: %d, Price: ₱%.2f, Status: %s.",
+                    stockId, sku, qty, price, available ? "Available" : "Unavailable"));
                 JOptionPane.showMessageDialog(this,
                         "Stock item updated successfully.",
                         "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -1490,6 +1498,7 @@ public class Window extends javax.swing.JFrame {
 
         if (confirm == JOptionPane.YES_OPTION) {
             if (database.deleteStock(stockId)) {
+                Audit.log("STOCK", "Stock item deleted — ID: " + stockId + ", SKU: " + sku + ".");
                 store.removeStock(stockId);
                 ((javax.swing.table.DefaultTableModel) jTable2.getModel())
                         .removeRow(selectedRow);
@@ -1601,7 +1610,7 @@ public class Window extends javax.swing.JFrame {
 
         if (name.isBlank() || sku.isBlank()) return;
 
-        // If the same SKU is already in the cart, merge quantities
+        // If the same SKU merge quantities
         for (Cart existing : cartItems) {
             if (existing.getSku().equalsIgnoreCase(sku)) {
                 cartItems.remove(existing);
@@ -1615,14 +1624,11 @@ public class Window extends javax.swing.JFrame {
         cartItems.add(new Cart(name, sku, qty, currentUnitPrice));
         refreshCartList();
 
-        // Go back to the store so the customer can keep shopping
         layout.show(getContentPane(), "card4");
     }//GEN-LAST:event_jButton18ActionPerformed
 
     private void jButton20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton20ActionPerformed
         // TODO add your handling code here:
-        // ── STEP 1: New drug name + type ──────────────────────────────────────
-        // ── STEP 1: New drug name + type ──────────────────────────────────────
         javax.swing.JTextField drugNameField = new javax.swing.JTextField();
         javax.swing.JTextField drugTypeField = new javax.swing.JTextField();
 
@@ -1745,6 +1751,9 @@ public class Window extends javax.swing.JFrame {
                 store.loadAll(database);   // sync local cache with real DB IDs
                 loadStockTable();
                 loadDrugTable();
+                Audit.log("STOCK", String.format(
+                    "New drug + stock added — Drug: '%s', SKU: %s, Dosage: %s %s, Qty: %d, Price: ₱%.2f, Supplier: %s.",
+                    newDrugName, sku, dosage, form, qty, price, sup));
                 JOptionPane.showMessageDialog(this,
                         "\"" + newDrugName + "\" and its first stock entry added successfully.",
                         "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -1777,6 +1786,9 @@ public class Window extends javax.swing.JFrame {
         layout = (CardLayout) getContentPane().getLayout();
         
         configureSpinner();
+        
+        Audit.init(jTable4);
+        Audit.log("SYSTEM", "WenMed application started");
     }
     
     private void configureSpinner() {
@@ -2138,7 +2150,6 @@ public class Window extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -2147,7 +2158,6 @@ public class Window extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JList<String> jList1;
-    private javax.swing.JList<String> jList2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
@@ -2164,7 +2174,6 @@ public class Window extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
-    private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JSpinner jSpinner1;
