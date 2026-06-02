@@ -11,18 +11,18 @@ import javax.swing.table.DefaultTableModel;
  */
 public class Audit {
 
-    // ── Singleton instance ────────────────────────────────────────────────────
+    // singleton
     private static Audit instance;
 
-    // ── Table reference and model ─────────────────────────────────────────────
+    // model
     private JTable table;
     private DefaultTableModel model;
 
-    // ── Timestamp format ──────────────────────────────────────────────────────
+    // timestamp
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd  HH:mm:ss");
 
-    // ── Column indices ────────────────────────────────────────────────────────
+    // indices
     private static final int COL_DATE    = 0;
     private static final int COL_TYPE    = 1;
     private static final int COL_MESSAGE = 2;
@@ -37,7 +37,7 @@ public class Audit {
     }
 
     public static void log(String type, String message) {
-        if (instance == null) return;   // guard — not yet initialised
+        if (instance == null) return;
         instance.addEntry(type, message);
     }
 
