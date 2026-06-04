@@ -188,7 +188,7 @@ public class Database {
                     set.getInt("min_stock"),
                     set.getString("unit"),
                     set.getInt("available") == 1,
-                    set.getInt("image_id"),
+                    set.getString("image_id"),
                     set.getString("sup_name"),
                     set.getString("last_restock"),
                     set.getString("exp_date"),
@@ -314,6 +314,18 @@ public class Database {
         }
     }
     
+    public boolean deleteDrug(int id) {
+        String query = "DELETE FROM drugs WHERE id = ?";
+        try (PreparedStatement exec = database.prepareStatement(query)) {
+            exec.setInt(1, id);
+            return exec.executeUpdate() > 0;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(),
+                    "SQL ERROR " + e.getErrorCode(), JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+    
     public boolean updateUsername(String oldUsername, String newUsername) {
         String query = "UPDATE users SET username = ? WHERE username = ?";
         try (PreparedStatement exec = database.prepareStatement(query)) {
@@ -368,12 +380,12 @@ public class Database {
     public boolean updateStock(int id, String sku, String dosage, String form,
                            String packaging, double origPrice, double price,
                            double discount, int quantity, int minStock,
-                           String unit, boolean available, String supName,
-                           String lastRestock, String expDate) {
+                           String unit, boolean available, String imageId,
+                           String supName, String lastRestock, String expDate) {
         String query =
             "UPDATE kiosk_inv SET sku=?, dosage=?, form=?, packaging=?, " +
             "orig_price=?, price=?, discount=?, quantity=?, min_stock=?, " +
-            "unit=?, available=?, sup_name=?, last_restock=?, exp_date=? " +
+            "unit=?, available=?, image_id=?, sup_name=?, last_restock=?, exp_date=? " +
             "WHERE id=?";
         try (PreparedStatement exec = database.prepareStatement(query)) {
             exec.setString(1,  sku);
@@ -387,10 +399,11 @@ public class Database {
             exec.setInt(9,     minStock);
             exec.setString(10, unit);
             exec.setInt(11,    available ? 1 : 0);
-            exec.setString(12, supName);
-            exec.setString(13, lastRestock);
-            exec.setString(14, expDate);
-            exec.setInt(15,    id);
+            exec.setString(12, imageId);
+            exec.setString(13, supName);
+            exec.setString(14, lastRestock);
+            exec.setString(15, expDate);
+            exec.setInt(16,    id);
             return exec.executeUpdate() > 0;
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, e.getMessage(),

@@ -33,6 +33,11 @@ public class Window extends javax.swing.JFrame {
     
     private String currentUserType;
     
+    private int loginAttempts = 0;
+    private static final int MAX_LOGIN_ATTEMPTS = 4;
+    private static final int LOCKOUT_SECONDS    = 60;
+    private javax.swing.Timer lockoutTimer;
+    
     private static final int TAB_STOCK = 0;
     private static final int TAB_ACCOUNT = 1;
     private static final int TAB_AUDIT = 2;
@@ -557,6 +562,7 @@ public class Window extends javax.swing.JFrame {
         );
 
         jTable3.setAutoCreateRowSorter(true);
+        jTable3.setFont(new java.awt.Font("Segoe UI", 1, 20)); // NOI18N
         jTable3.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null},
@@ -585,6 +591,7 @@ public class Window extends javax.swing.JFrame {
         });
         jTable3.setToolTipText("Double Click to View..");
         jTable3.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        jTable3.setRowHeight(30);
         jTable3.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 onDoubleClick(evt);
@@ -815,7 +822,6 @@ public class Window extends javax.swing.JFrame {
         jLabel6.setText("{Name}");
 
         jLabel7.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel7.setText("{Drug_Image}");
 
         jLabel8.setFont(new java.awt.Font("Segoe UI", 3, 24)); // NOI18N
         jLabel8.setForeground(new java.awt.Color(51, 51, 51));
@@ -972,49 +978,7 @@ public class Window extends javax.swing.JFrame {
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
-        String username = jTextField1.getText().trim();
-        String password = new String(jPasswordField1.getPassword());
-        java.util.List<String> errors = new java.util.ArrayList<>();
- 
-        if (username.isEmpty()) {
-            errors.add("Username cannot be empty.");
-        }
-        if (password.isEmpty()) {
-            errors.add("Password cannot be empty.");
-        }
-        if (!errors.isEmpty()) {
-            JOptionPane.showMessageDialog(
-                this,
-                String.join("\n", errors),
-                "Login Error",
-                JOptionPane.ERROR_MESSAGE
-            );
-            return;
-        }
-        String userType = store.getUserType(username, password);
- 
-        if (userType == null) {
-            Audit.log("LOGIN", "Failed login attempt for username: '" + username + "'.");
-            JOptionPane.showMessageDialog(
-                this,
-                "Invalid username or password.",
-                "Login Failed",
-                JOptionPane.ERROR_MESSAGE
-            );
-            jPasswordField1.setText("");
-            return;
-        }
-        currentUserType = userType;
-        
-        Audit.log("LOGIN", "Employee '" + username + "' logged in successfully. Role: " + userType + ".");
-        
-        applyPermissions(userType);
-        loadUserTable();
-        
-        jTextField1.setText("");
-        jPasswordField1.setText("");
- 
-        layout.show(getContentPane(), "card3");
+        attemptLogin();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
@@ -1296,7 +1260,7 @@ public class Window extends javax.swing.JFrame {
         // TODO add your handling code here:
         java.util.List<Drug> drugList = new java.util.ArrayList<>(store.getDrugs());
         String[] drugNames = drugList.stream().map(Drug::getName).toArray(String[]::new);
-
+ 
         // input fields
         javax.swing.JComboBox<String> drugCombo = new javax.swing.JComboBox<>(drugNames);
         javax.swing.JTextField skuField      = new javax.swing.JTextField();
@@ -1310,10 +1274,24 @@ public class Window extends javax.swing.JFrame {
         javax.swing.JTextField minStockField = new javax.swing.JTextField("10");
         javax.swing.JTextField unitField     = new javax.swing.JTextField("pcs");
         javax.swing.JTextField supField      = new javax.swing.JTextField();
-        javax.swing.JTextField restockField  = new javax.swing.JTextField(
-                new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()));
+        javax.swing.JTextField restockField  = new javax.swing.JTextField(new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()));
         javax.swing.JTextField expField      = new javax.swing.JTextField();
-
+ 
+        final String[] chosenImagePath = {""};
+        javax.swing.JLabel imageNameLabel = new javax.swing.JLabel("No image selected");
+        javax.swing.JButton imageBrowseBtn = new javax.swing.JButton("Browse Image…");
+        imageBrowseBtn.addActionListener(ae -> {
+            String p = chooseAndCopyImage();
+            if (p != null) {
+                chosenImagePath[0] = p;
+                imageNameLabel.setText(new java.io.File(p).getName());
+            }
+        });
+        javax.swing.JPanel imageRow = new javax.swing.JPanel(
+            new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 4, 0));
+        imageRow.add(imageBrowseBtn);
+        imageRow.add(imageNameLabel);
+ 
         Object[] fields = {
             "Drug:",         drugCombo,
             "SKU:",          skuField,
@@ -1329,12 +1307,13 @@ public class Window extends javax.swing.JFrame {
             "Supplier:",     supField,
             "Last Restock:", restockField,
             "Expiry Date:",  expField,
+            "Image:",        imageRow,
         };
-
+ 
         int result = JOptionPane.showConfirmDialog(
-                this, fields, "Add Stock Item", JOptionPane.OK_CANCEL_OPTION);
+            this, fields, "Add Stock Item", JOptionPane.OK_CANCEL_OPTION);
         if (result != JOptionPane.OK_OPTION) return;
-
+ 
         try {
             int    selectedDrugIdx = drugCombo.getSelectedIndex();
             int    drugId    = drugList.get(selectedDrugIdx).getId();
@@ -1351,18 +1330,18 @@ public class Window extends javax.swing.JFrame {
             String sup       = supField.getText().trim();
             String restock   = restockField.getText().trim();
             String exp       = expField.getText().trim();
-
+ 
             if (sku.isEmpty() || sup.isEmpty() || exp.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                        "SKU, Supplier, and Expiry Date are required.",
-                        "Validation Error", JOptionPane.WARNING_MESSAGE);
+                    "SKU, Supplier, and Expiry Date are required.",
+                    "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-
+ 
             Stock newStock = new Stock(drugId, sku, dosage, form, pack,
-                    origPrice, price, discount, qty, minStock, unit,
-                    true, 0, sup, restock, exp);
-
+                origPrice, price, discount, qty, minStock, unit,
+                true, chosenImagePath[0], sup, restock, exp);
+ 
             if (database.addStock(newStock)) {
                 // reload from DB
                 store.loadAll(database);
@@ -1371,12 +1350,12 @@ public class Window extends javax.swing.JFrame {
                     "New stock variant added — Drug: '%s', SKU: %s, Dosage: %s %s, Qty: %d, Price: ₱%.2f, Supplier: %s.",
                     drugList.get(selectedDrugIdx).getName(), sku, dosage, form, qty, price, sup));
                 JOptionPane.showMessageDialog(this, "Stock item added successfully.",
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this,
-                    "Please enter valid numbers for price, quantity, and discount.",
-                    "Input Error", JOptionPane.ERROR_MESSAGE);
+                "Please enter valid numbers for price, quantity, and discount.",
+                "Input Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_jButton13ActionPerformed
 
@@ -1404,6 +1383,7 @@ public class Window extends javax.swing.JFrame {
         }
 
         // ── Pre-filled fields ─────────────────────────────────────────────────
+        // ── Pre-filled fields ─────────────────────────────────────────────────
         javax.swing.JTextField skuField       = new javax.swing.JTextField(target.getSku());
         javax.swing.JTextField dosageField    = new javax.swing.JTextField(target.getDosage());
         javax.swing.JTextField formField      = new javax.swing.JTextField(target.getForm());
@@ -1420,6 +1400,21 @@ public class Window extends javax.swing.JFrame {
         javax.swing.JTextField restockField   = new javax.swing.JTextField(target.getLastRestock());
         javax.swing.JTextField expField       = new javax.swing.JTextField(target.getExpDate());
 
+        final String[] chosenImagePath = { target.getImageId() != null ? target.getImageId() : "" };
+        String existingName = chosenImagePath[0].isBlank() ? "No image" : new java.io.File(chosenImagePath[0]).getName();
+        javax.swing.JLabel imageNameLabel = new javax.swing.JLabel(existingName);
+        javax.swing.JButton imageBrowseBtn = new javax.swing.JButton("Browse Image…");
+        imageBrowseBtn.addActionListener(ae -> {
+            String p = chooseAndCopyImage();
+            if (p != null && !p.isBlank()) {
+                chosenImagePath[0] = p;
+                imageNameLabel.setText(new java.io.File(p).getName());
+            }
+        });
+        javax.swing.JPanel imageRow = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 4, 0));
+        imageRow.add(imageBrowseBtn);
+        imageRow.add(imageNameLabel);
+
         Object[] fields = {
             "SKU:",          skuField,
             "Dosage:",       dosageField,
@@ -1435,6 +1430,7 @@ public class Window extends javax.swing.JFrame {
             "Supplier:",     supField,
             "Last Restock:", restockField,
             "Expiry Date:",  expField,
+            "Image:",        imageRow,
         };
 
         int result = JOptionPane.showConfirmDialog(
@@ -1468,7 +1464,7 @@ public class Window extends javax.swing.JFrame {
 
             boolean done = database.updateStock(stockId, sku, dosage, form, pack,
                     origPrice, price, discount, qty, minStock, unit,
-                    available, sup, restock, exp);
+                    available, chosenImagePath[0], sup, restock, exp);
 
             if (done) {
                 store.loadAll(database);  // sync local cache
@@ -1493,8 +1489,8 @@ public class Window extends javax.swing.JFrame {
         int selectedRow = jTable2.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this,
-                    "Please select a stock item to delete.",
-                    "No Selection", JOptionPane.WARNING_MESSAGE);
+                "Please select a stock item to delete.",
+                "No Selection", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -1506,11 +1502,38 @@ public class Window extends javax.swing.JFrame {
                 "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
+            // get drug id and name before deletion
+            int drugId = -1;
+            String drugName = "";
+            for (Stock s : store.getStocks()) {
+                if (s.getId() == stockId) { drugId = s.getDrugId(); break; }
+            }
+            for (Drug d : store.getDrugs()) {
+                if (d.getId() == drugId) { drugName = d.getName(); break; }
+            }
+
             if (database.deleteStock(stockId)) {
                 Audit.log("STOCK", "Stock item deleted — ID: " + stockId + ", SKU: " + sku + ".");
                 store.removeStock(stockId);
                 ((javax.swing.table.DefaultTableModel) jTable2.getModel())
                         .removeRow(selectedRow);
+
+                // has variants
+                if (drugId != -1) {
+                    boolean hasRemaining = false;
+                    for (Stock s : store.getStocks()) {
+                        if (s.getDrugId() == drugId) { hasRemaining = true; break; }
+                    }
+                    if (!hasRemaining) {
+                        if (database.deleteDrug(drugId)) {
+                            store.removeDrug(drugId);
+                            loadDrugTable();
+                            Audit.log("DRUG", String.format(
+                                "Drug auto-removed (no remaining stock) — \"%s\" (ID: %d).",
+                                drugName, drugId));
+                        }
+                    }
+                }
             }
         }
     }//GEN-LAST:event_jButton15ActionPerformed
@@ -1537,47 +1560,7 @@ public class Window extends javax.swing.JFrame {
 
     private void jPasswordField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jPasswordField1ActionPerformed
         // TODO add your handling code here:
-        String username = jTextField1.getText().trim();
-        String password = new String(jPasswordField1.getPassword());
-        java.util.List<String> errors = new java.util.ArrayList<>();
- 
-        if (username.isEmpty()) {
-            errors.add("Username cannot be empty.");
-        }
-        if (password.isEmpty()) {
-            errors.add("Password cannot be empty.");
-        }
-        if (!errors.isEmpty()) {
-            JOptionPane.showMessageDialog(
-                this,
-                String.join("\n", errors),
-                "Login Error",
-                JOptionPane.ERROR_MESSAGE
-            );
-            return;
-        }
- 
-        // in memory auth
-        String userType = store.getUserType(username, password);
- 
-        if (userType == null) {
-            JOptionPane.showMessageDialog(
-                this,
-                "• Invalid username or password.",
-                "Login Failed",
-                JOptionPane.ERROR_MESSAGE
-            );
-            jPasswordField1.setText("");
-            return;
-        }
-        currentUserType = userType;
-        applyPermissions(userType);
-        loadUserTable();
-        
-        jTextField1.setText("");
-        jPasswordField1.setText("");
- 
-        layout.show(getContentPane(), "card3");
+        attemptLogin();
     }//GEN-LAST:event_jPasswordField1ActionPerformed
 
     private void jButton17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton17ActionPerformed
@@ -1640,36 +1623,35 @@ public class Window extends javax.swing.JFrame {
         // TODO add your handling code here:
         javax.swing.JTextField drugNameField = new javax.swing.JTextField();
         javax.swing.JTextField drugTypeField = new javax.swing.JTextField();
-
+ 
         int step1 = JOptionPane.showConfirmDialog(
-                this,
-                new Object[]{ "Drug Name:", drugNameField, "Generic Name:", drugTypeField },
-                "New Drug: Step 1 of 2",
-                JOptionPane.OK_CANCEL_OPTION);
+            this,
+            new Object[]{ "Drug Name:", drugNameField, "Generic Name:", drugTypeField },
+            "New Drug: Step 1 of 2",
+            JOptionPane.OK_CANCEL_OPTION);
         if (step1 != JOptionPane.OK_OPTION) return;
-
+ 
         String newDrugName = drugNameField.getText().trim();
         String newDrugType = drugTypeField.getText().trim(); // was: (String) drugTypeCombo.getSelectedItem()
-
+ 
         if (newDrugName.isEmpty() || newDrugType.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Drug name and generic type cannot be empty.", "Validation Error",
-                    JOptionPane.WARNING_MESSAGE);
+            "Drug name and generic type cannot be empty.", "Validation Error",
+            JOptionPane.WARNING_MESSAGE);
             return;
         }
-
-        // Duplicate check — tell the user to use jButton13 instead
+ 
+        // duplicate check
         for (Drug existing : store.getDrugs()) {
             if (existing.getName().equalsIgnoreCase(newDrugName)) {
                 JOptionPane.showMessageDialog(this,
-                        "\"" + newDrugName + "\" already exists in the system.\n"
-                        + "Use \"Add New Item\" to add a new variant for it instead.",
-                        "Duplicate Drug", JOptionPane.WARNING_MESSAGE);
+                    "\"" + newDrugName + "\" already exists in the system.\n"
+                    + "Use \"Add New Item\" to add a new variant for it instead.",
+                    "Duplicate Drug", JOptionPane.WARNING_MESSAGE);
                 return;
             }
         }
-
-        // ── STEP 2: First stock entry for this brand-new drug ─────────────────
+ 
         javax.swing.JTextField skuField       = new javax.swing.JTextField();
         javax.swing.JTextField dosageField    = new javax.swing.JTextField();
         javax.swing.JTextField formField      = new javax.swing.JTextField();
@@ -1681,10 +1663,24 @@ public class Window extends javax.swing.JFrame {
         javax.swing.JTextField minStockField  = new javax.swing.JTextField("10");
         javax.swing.JTextField unitField      = new javax.swing.JTextField("pcs");
         javax.swing.JTextField supField       = new javax.swing.JTextField();
-        javax.swing.JTextField restockField   = new javax.swing.JTextField(
-                new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()));
+        javax.swing.JTextField restockField   = new javax.swing.JTextField(new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()));
         javax.swing.JTextField expField       = new javax.swing.JTextField();
-
+ 
+        final String[] chosenImagePath2 = {""};
+        javax.swing.JLabel imageNameLabel2 = new javax.swing.JLabel("No image selected");
+        javax.swing.JButton imageBrowseBtn2 = new javax.swing.JButton("Browse Image…");
+        imageBrowseBtn2.addActionListener(ae -> {
+            String p = chooseAndCopyImage();
+            if (p != null) {
+                chosenImagePath2[0] = p;
+                imageNameLabel2.setText(new java.io.File(p).getName());
+            }
+        });
+        javax.swing.JPanel imageRow2 = new javax.swing.JPanel(
+                new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 4, 0));
+        imageRow2.add(imageBrowseBtn2);
+        imageRow2.add(imageNameLabel2);
+ 
         Object[] step2Fields = {
             "SKU:",          skuField,
             "Dosage:",       dosageField,
@@ -1699,14 +1695,15 @@ public class Window extends javax.swing.JFrame {
             "Supplier:",     supField,
             "Last Restock:", restockField,
             "Expiry Date:",  expField,
+            "Image:",        imageRow2,
         };
-
+ 
         int step2 = JOptionPane.showConfirmDialog(
-                this, step2Fields,
-                "New Drug: Step 2 of 2: First Stock Entry for \"" + newDrugName + "\"",
-                JOptionPane.OK_CANCEL_OPTION);
+            this, step2Fields,
+            "New Drug: Step 2 of 2: First Stock Entry for \"" + newDrugName + "\"",
+            JOptionPane.OK_CANCEL_OPTION);
         if (step2 != JOptionPane.OK_OPTION) return;
-
+ 
         try {
             String sku       = skuField.getText().trim();
             String dosage    = dosageField.getText().trim();
@@ -1721,21 +1718,19 @@ public class Window extends javax.swing.JFrame {
             String sup       = supField.getText().trim();
             String restock   = restockField.getText().trim();
             String exp       = expField.getText().trim();
-
+ 
             if (sku.isEmpty() || sup.isEmpty() || exp.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                        "SKU, Supplier, and Expiry Date are required.",
-                        "Validation Error", JOptionPane.WARNING_MESSAGE);
+                    "SKU, Supplier, and Expiry Date are required.",
+                    "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-
-            // ── Insert the drug row first ─────────────────────────────────────
+ 
             boolean drugOk = database.addDrug(newDrugName, newDrugType);
-            if (!drugOk) return;  // database.addDrug already shows an error dialog
-
-            // Reload so we can find the auto-generated drug ID
+            if (!drugOk) return;
+ 
             store.loadAll(database);
-
+ 
             int newDrugId = -1;
             for (Drug d : store.getDrugs()) {
                 if (d.getName().equalsIgnoreCase(newDrugName)) {
@@ -1743,7 +1738,7 @@ public class Window extends javax.swing.JFrame {
                     break;
                 }
             }
-
+ 
             if (newDrugId == -1) {
                 JOptionPane.showMessageDialog(this,
                         "Drug was saved but its ID could not be resolved. Please restart.",
@@ -1751,27 +1746,26 @@ public class Window extends javax.swing.JFrame {
                 return;
             }
 
-            // ── Insert the first stock entry pointing to the new drug ─────────
             Stock newStock = new Stock(newDrugId, sku, dosage, form, pack,
                     origPrice, price, discount, qty, minStock, unit,
-                    true, 0, sup, restock, exp);
-
+                    true, chosenImagePath2[0], sup, restock, exp);
+ 
             if (database.addStock(newStock)) {
-                store.loadAll(database);   // sync local cache with real DB IDs
+                store.loadAll(database);   // sync local cache with db
                 loadStockTable();
                 loadDrugTable();
                 Audit.log("STOCK", String.format(
                     "New drug + stock added — Drug: '%s', SKU: %s, Dosage: %s %s, Qty: %d, Price: ₱%.2f, Supplier: %s.",
                     newDrugName, sku, dosage, form, qty, price, sup));
                 JOptionPane.showMessageDialog(this,
-                        "\"" + newDrugName + "\" and its first stock entry added successfully.",
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                    "\"" + newDrugName + "\" and its first stock entry added successfully.",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
             }
-
+ 
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this,
-                    "Please enter valid numbers for price, quantity, and discount.",
-                    "Input Error", JOptionPane.ERROR_MESSAGE);
+                "Please enter valid numbers for price, quantity, and discount.",
+                "Input Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_jButton20ActionPerformed
 
@@ -1848,16 +1842,14 @@ public class Window extends javax.swing.JFrame {
         boolean isAuditor = "Auditor".equalsIgnoreCase(userType);
  
         // Account Manager tab visibility
-        boolean canSeeAccounts = isAdmin || isManager;
-        jTabbedPane2.setEnabledAt(TAB_ACCOUNT, canSeeAccounts);
-        
-        // Auditor tab visibility
-        canSeeAccounts = isAuditor || isManager || isAdmin;
-        jTabbedPane2.setEnabledAt(TAB_AUDIT, canSeeAccounts);
- 
-        // If the restricted tab is currently selected, fall back to Stock Manager
-        if (!canSeeAccounts
-                && jTabbedPane2.getSelectedIndex() == TAB_ACCOUNT || jTabbedPane2.getSelectedIndex() == TAB_AUDIT) {
+        boolean canManageAccounts = isAdmin || isManager;
+        jTabbedPane2.setEnabledAt(TAB_ACCOUNT, canManageAccounts);
+
+        boolean canSeeAudit = isAuditor || isManager || isAdmin;
+        jTabbedPane2.setEnabledAt(TAB_AUDIT, canSeeAudit);
+
+        int currentTab = jTabbedPane2.getSelectedIndex();
+        if ((currentTab == TAB_ACCOUNT && !canManageAccounts) || (currentTab == TAB_AUDIT && !canSeeAudit)) {
             jTabbedPane2.setSelectedIndex(TAB_STOCK);
         }
  
@@ -2136,23 +2128,29 @@ public class Window extends javax.swing.JFrame {
         jLabel17.setText(d.getDosage());
         jLabel13.setText(d.getSku());
 
-        // Find stock quantity ceiling
+        // find max stock quantity
         int maxQty = 1;
+        String imagePath = "";
         for (Stock s : store.getStocks()) {
             if (s.getSku().equalsIgnoreCase(d.getSku())) {
-                maxQty = Math.max(1, s.getQuantity());
+                maxQty    = Math.max(1, s.getQuantity());
+                imagePath = s.getImageId() != null ? s.getImageId() : "";
                 break;
             }
         }
-        
+
+        // Display the product image (or placeholder if none)
+        loadProductImage(imagePath);
+
         currentUnitPrice = d.getPrice();
         javax.swing.SpinnerNumberModel model = (javax.swing.SpinnerNumberModel) jSpinner1.getModel();
         model.setMaximum(maxQty);
         model.setMinimum(1);
         model.setValue(1);
+        
+        jLabel11.setText(String.format("₱ %.2f", currentUnitPrice));
     }
     
-    /** Syncs the cartItems list into jList1 for display. */
     private void refreshCartList() {
         javax.swing.DefaultListModel<String> model = new javax.swing.DefaultListModel<>();
         double grandTotal = 0.0;
@@ -2163,7 +2161,186 @@ public class Window extends javax.swing.JFrame {
         jList1.setModel(model);
         jLabel10.setText(String.format("Total: ₱%.2f", grandTotal));
     }
+    
+    private String chooseAndCopyImage() {
+        javax.swing.JFileChooser chooser = new javax.swing.JFileChooser();
+        chooser.setDialogTitle("Select Product Image");
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Image Files (jpg, jpeg, png, gif, bmp)",
+                "jpg", "jpeg", "png", "gif", "bmp"));
+        chooser.setAcceptAllFileFilterUsed(false);
 
+        if (chooser.showOpenDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) {
+            return "";
+        }
+
+        java.io.File src = chooser.getSelectedFile();
+
+        java.io.File imgDir = new java.io.File("drug_images");
+        if (!imgDir.exists() && !imgDir.mkdirs()) {
+            JOptionPane.showMessageDialog(this,
+                    "Could not create 'drug_images' directory.",
+                    "Image Error", JOptionPane.ERROR_MESSAGE);
+            return "";
+        }
+
+        String destName = System.currentTimeMillis() + "_" + src.getName();
+        java.io.File dest = new java.io.File(imgDir, destName);
+
+        try {
+            java.nio.file.Files.copy(src.toPath(), dest.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            // relative path
+            return dest.getAbsolutePath();
+        } catch (java.io.IOException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Failed to copy image:\n" + ex.getMessage(),
+                    "Image Error", JOptionPane.ERROR_MESSAGE);
+            return "";
+        }
+    }
+    
+    private void attemptLogin() {
+        // Guard: do nothing if still locked out
+        if (!jButton2.isEnabled()) return;
+
+        String username = jTextField1.getText().trim();
+        String password = new String(jPasswordField1.getPassword());
+
+        // Empty-field validation — does NOT count as a failed attempt
+        java.util.List<String> errors = new java.util.ArrayList<>();
+        if (username.isEmpty()) errors.add("Username cannot be empty.");
+        if (password.isEmpty()) errors.add("Password cannot be empty.");
+        if (!errors.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                String.join("\n", errors),
+                "Login Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String userType = store.getUserType(username, password);
+
+        if (userType == null) {
+            // Failed attempt
+            loginAttempts++;
+            int remaining = MAX_LOGIN_ATTEMPTS - loginAttempts;
+
+            Audit.log("LOGIN", String.format(
+                "Failed login attempt for username: '%s'. Attempt %d of %d.",
+                username, loginAttempts, MAX_LOGIN_ATTEMPTS));
+
+            if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+                // Lock everything out
+                jButton2.setText("Locked");
+                jButton2.setEnabled(false);
+                jTextField1.setEnabled(false);
+                jPasswordField1.setEnabled(false);
+                jPasswordField1.setText("");
+
+                final int[] secondsLeft = { LOCKOUT_SECONDS };
+
+                lockoutTimer = new javax.swing.Timer(1000, null);
+                lockoutTimer.addActionListener(tick -> {
+                    secondsLeft[0]--;
+                    if (secondsLeft[0] <= 0) {
+                        lockoutTimer.stop();
+                        loginAttempts = 0;
+                        jButton2.setText("Login");
+                        jButton2.setEnabled(true);
+                        jTextField1.setEnabled(true);
+                        jPasswordField1.setEnabled(true);
+                        Audit.log("LOGIN", "Lockout expired — login re-enabled.");
+                    } else {
+                        jButton2.setText(secondsLeft[0] + "s");
+                    }
+                });
+                lockoutTimer.start();
+
+                JOptionPane.showMessageDialog(this,
+                    "Too many failed login attempts.\n" +
+                    "The system has been disabled for 1 minute.",
+                    "System Locked", JOptionPane.ERROR_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "Invalid username or password.\n" +
+                    remaining + " attempt(s) remaining.",
+                    "Login Failed", JOptionPane.ERROR_MESSAGE);
+                jPasswordField1.setText("");
+            }
+            return;
+        }
+        
+        loginAttempts = 0;
+        currentUserType = userType;
+
+        Audit.log("LOGIN", "Employee '" + username + "' logged in successfully. Role: " + userType + ".");
+
+        applyPermissions(userType);
+        loadUserTable();
+
+        jTextField1.setText("");
+        jPasswordField1.setText("");
+
+        layout.show(getContentPane(), "card3");
+    }
+    
+    private void loadProductImage(String imagePath) {
+        if (imagePath == null || imagePath.isBlank()) {
+            jLabel7.setIcon(null);
+            jLabel7.setText("{Drug_Image}");
+            return;
+        }
+        java.io.File f = new java.io.File(imagePath);
+        if (!f.exists() || !f.isFile()) {
+            jLabel7.setIcon(null);
+            jLabel7.setText("{Drug_Image}");
+            return;
+        }
+        try {
+            java.awt.image.BufferedImage raw = javax.imageio.ImageIO.read(f);
+            if (raw == null) {
+                jLabel7.setIcon(null);
+                jLabel7.setText("{Drug_Image}");
+                return;
+            }
+            // Use label size
+            int lw = jLabel7.getWidth()  > 0 ? jLabel7.getWidth()  : 330;
+            int lh = jLabel7.getHeight() > 0 ? jLabel7.getHeight() : 428;
+
+            double scale = Math.min((double) lw / raw.getWidth(),
+                                    (double) lh / raw.getHeight());
+            int sw = Math.max(1, (int) (raw.getWidth()  * scale));
+            int sh = Math.max(1, (int) (raw.getHeight() * scale));
+
+            java.awt.image.BufferedImage scaled =
+                    new java.awt.image.BufferedImage(sw, sh,
+                            java.awt.image.BufferedImage.TYPE_INT_ARGB);
+            java.awt.Graphics2D g2 = scaled.createGraphics();
+            g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                                java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING,
+                                java.awt.RenderingHints.VALUE_RENDER_QUALITY);
+            g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                                java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.drawImage(raw, 0, 0, sw, sh, null);
+            g2.dispose();
+
+            jLabel7.setText("");
+            jLabel7.setIcon(new javax.swing.ImageIcon(scaled));
+            jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            jLabel7.setVerticalAlignment(javax.swing.SwingConstants.CENTER);
+            jLabel7.revalidate();
+            jLabel7.repaint(); 
+
+        } catch (java.io.IOException ex) {
+            jLabel7.setIcon(null);
+            jLabel7.setText("{Drug_Image}");
+            jLabel7.revalidate();
+            jLabel7.repaint();
+            
+            JOptionPane.showMessageDialog(this, ex.getStackTrace(), "File Upload Error!", JOptionPane.ERROR_MESSAGE);
+        }
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton10;
