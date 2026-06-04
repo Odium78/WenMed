@@ -22,5 +22,7 @@ public class Wenmed {
         
         // run window on separate thread
         SwingUtilities.invokeLater(() -> new Window(db));
+        
+        db.makeTable();
     }
 }

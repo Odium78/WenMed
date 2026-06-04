@@ -142,6 +142,7 @@ public class Window extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(0, 204, 204));
+        setResizable(false);
         getContentPane().setLayout(new java.awt.CardLayout());
 
         jPanel1.setBackground(new java.awt.Color(245, 245, 239));
@@ -476,6 +477,8 @@ public class Window extends javax.swing.JFrame {
         jLabel15.setForeground(new java.awt.Color(51, 51, 51));
         jLabel15.setText("Stock Alerts");
 
+        jList2.setBorder(null);
+        jList2.setFont(new java.awt.Font("Trebuchet MS", 0, 13)); // NOI18N
         jScrollPane6.setViewportView(jList2);
 
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
@@ -486,14 +489,14 @@ public class Window extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
-                        .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 512, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jButton22))
                     .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 1030, Short.MAX_VALUE)
                     .addGroup(jPanel9Layout.createSequentialGroup()
                         .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel15))
+                            .addComponent(jLabel15)
+                            .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 479, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -507,12 +510,9 @@ public class Window extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel15)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel9Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jButton22, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE))
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 176, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(jButton22, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -584,6 +584,7 @@ public class Window extends javax.swing.JFrame {
             }
         });
         jTable3.setToolTipText("Double Click to View..");
+        jTable3.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTable3.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 onDoubleClick(evt);
@@ -1784,6 +1785,7 @@ public class Window extends javax.swing.JFrame {
         jTextField1.setText("");
         jPasswordField1.setText("");
         layout.show(getContentPane(), "card2");
+        
     }//GEN-LAST:event_jButton22ActionPerformed
     
     private void initSettings(){
@@ -1887,14 +1889,18 @@ public class Window extends javax.swing.JFrame {
         // Build a lookup: drugId -> first matching Stock entry
         java.util.Map<Integer, LocalData.Stock> stockByDrugId = new java.util.HashMap<>();
         for (LocalData.Stock s : store.getStocks()) {
-            stockByDrugId.putIfAbsent(s.getDrugId(), s);
+            if (s.getQuantity() > 0) {
+                stockByDrugId.putIfAbsent(s.getDrugId(), s);
+            }
         }
 
         for (Drug d : store.getDrugs()) {
+            if (!stockByDrugId.containsKey(d.getId())) continue;
+             
             LocalData.Stock s = stockByDrugId.get(d.getId());
             String company = (s != null) ? s.getSupName() : "";
-            float  price   = (s != null) ? (float) s.getPrice() : 0.0f;
-
+//            float  price   = (s != null) ? (float) s.getPrice() : 0.0f;
+            
             model.addRow(new Object[]{ d.getName(), company, d.getType()});
         }
     }
@@ -1918,6 +1924,8 @@ public class Window extends javax.swing.JFrame {
                 s.getExpDate()
             });
         }
+        
+        refreshLowStockAlerts();
     }
     
     /**
@@ -1966,11 +1974,42 @@ public class Window extends javax.swing.JFrame {
         }
     }
     
-    /**
- * Filters jTable1 by jTextField5.
- * Matches username (contains) or type (contains).
- * Empty query restores the full list.
- */
+    private void refreshLowStockAlerts() {
+        javax.swing.DefaultListModel<String> alertModel = new javax.swing.DefaultListModel<>();
+
+        java.time.format.DateTimeFormatter fmt =
+            java.time.format.DateTimeFormatter.ofPattern("MM-dd-yy HH:mm");
+        String timestamp = java.time.LocalDateTime.now().format(fmt);
+
+        java.util.Map<Integer, Drug> drugMap = new java.util.HashMap<>();
+        for (Drug d : store.getDrugs()) {
+            drugMap.put(d.getId(), d);
+        }
+
+        for (Stock s : store.getStocks()) {
+            if (s.getQuantity() <= s.getMinStock()) {
+                Drug d = drugMap.get(s.getDrugId());
+                String drugName = (d != null) ? d.getName() : "Unknown";
+                String alert = String.format(
+                    "!WARN! %s %s %s  %d Remaining_%s_%s",
+                    drugName,
+                    s.getForm(),
+                    s.getDosage(),
+                    s.getQuantity(),
+                    s.getSku(),
+                    timestamp
+                );
+                alertModel.addElement(alert);
+            }
+        }
+
+        jList2.setModel(alertModel);
+
+        if (!alertModel.isEmpty()) {
+            Audit.log("ALERT", alertModel.getSize() + " low-stock item(s) detected.");
+        }
+    }
+    
     private void searchUserTable() {
         String query = jTextField5.getText().trim().toLowerCase();
 
@@ -2014,10 +2053,14 @@ public class Window extends javax.swing.JFrame {
 
         java.util.Map<Integer, LocalData.Stock> stockByDrugId = new java.util.HashMap<>();
         for (LocalData.Stock s : store.getStocks()) {
-            stockByDrugId.putIfAbsent(s.getDrugId(), s);
+            if (s.getQuantity() > 0) {
+                stockByDrugId.putIfAbsent(s.getDrugId(), s);
+            }
         }
 
         for (Drug d : store.getDrugs()) {
+            if (!stockByDrugId.containsKey(d.getId())) continue;
+            
             LocalData.Stock s = stockByDrugId.get(d.getId());
             
             String company = (s != null) ? s.getSupName() : "";
@@ -2036,7 +2079,6 @@ public class Window extends javax.swing.JFrame {
 
         if(model.getRowCount() == 0){
             JOptionPane.showMessageDialog(this,
-                    // FIX 3: Reference jTextField2 (Store tab search)
                     "No results found for: \"" + jTextField2.getText().trim() + "\"",
                     "No Results", JOptionPane.INFORMATION_MESSAGE);
 

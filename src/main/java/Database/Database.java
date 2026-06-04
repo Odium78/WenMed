@@ -19,10 +19,6 @@ public class Database {
         this.database  = connectionDB.getConnection();
     }
 
-    // ═════════════════════════════════════════════════════════════════════════
-    // AUTH  (kept for direct use if ever needed; prefer LocalDataStore in UI)
-    // ═════════════════════════════════════════════════════════════════════════
-
     public boolean authUser(String username, String password) {
         String query = "SELECT * FROM users WHERE username = ? AND password = ?";
         try (PreparedStatement exec = database.prepareStatement(query)) {
@@ -51,10 +47,6 @@ public class Database {
             return null;
         }
     }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // USER CRUD
-    // ═════════════════════════════════════════════════════════════════════════
 
     public boolean addUser(String username, String password, String type) {
         String query = "INSERT INTO users(username, password, type) VALUES(?,?,?)";
@@ -138,15 +130,8 @@ public class Database {
         }
         return users;
     }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // DRUG CRUD
-    // ═════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Loads all drugs from the DB into Drug objects for LocalDataStore.
-     * Only called once at startup.
-     */
+    
+    // memory saver?
     public List<Drug> getDrugs() {
         List<Drug> drugs = new ArrayList<>();
         String query = "SELECT id, name, type FROM drugs ORDER BY name";
@@ -166,10 +151,6 @@ public class Database {
         return drugs;
     }
 
-    /**
-     * Inserts a new drug into the DB.
-     * Called by LocalDataStore.flushPendingToDatabase().
-     */
     public boolean addDrug(String name, String type) {
         String query = "INSERT INTO drugs(name, type) VALUES(?,?)";
         try (PreparedStatement exec = database.prepareStatement(query)) {
@@ -183,15 +164,7 @@ public class Database {
             return false;
         }
     }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // STOCK CRUD
-    // ═════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Loads all kiosk_inv rows into Stock objects for LocalDataStore.
-     * Only called once at startup.
-     */
+    
     public List<Stock> getStocks() {
         List<Stock> stocks = new ArrayList<>();
         String query = "SELECT id, drug_id, sku, dosage, form, packaging, "
@@ -230,18 +203,6 @@ public class Database {
         return stocks;
     }
     
-    // ═════════════════════════════════════════════════════════════════════════
-    // DRUG DETAIL  (drugs JOIN kiosk_inv)
-    // ═════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Returns every kiosk_inv variant for a given drug name.
-     * Case-insensitive match on drugs.name.
-     *
-     * Example: getDrugDetails("Paracetamol") might return
-     *   → Paracetamol 500mg tablet  (SKU: PC-500-TAB)
-     *   → Paracetamol 250mg syrup   (SKU: PC-250-SYR)
-     */
     public List<DrugDetail> getDrugDetails(String drugName) {
         List<DrugDetail> results = new ArrayList<>();
         String query =
@@ -272,10 +233,6 @@ public class Database {
         return results;
     }
 
-    /**
-     * Same as above but searches by SKU — always returns exactly one entry
-     * (or an empty list if not found), since SKU is UNIQUE in kiosk_inv.
-     */
     public DrugDetail getDrugDetailBySku(String sku) {
         String query =
             "SELECT d.name, d.type, k.dosage, k.form, k.sup_name, k.price, k.sku " +
@@ -304,12 +261,6 @@ public class Database {
         return null;
     }
 
-    /**
-     * Inserts a pending Stock entry into the DB.
-     * Called by LocalDataStore.flushPendingToDatabase().
-     * @return true on success; the Stock's id field is NOT updated here
-     *         (re-load from DB if you need the generated id).
-     */
     public boolean addStock(Stock s) {
         String query =
             "INSERT INTO kiosk_inv(drug_id, sku, dosage, form, packaging, "
@@ -329,7 +280,7 @@ public class Database {
             exec.setInt(10,   s.getMinStock());
             exec.setString(11, s.getUnit());
             exec.setInt(12,   s.isAvailable() ? 1 : 0);
-            exec.setInt(13,   s.getImageId());
+            exec.setString(13,   s.getImageId());
             exec.setString(14, s.getSupName());
             exec.setString(15, s.getLastRestock());
             exec.setString(16, s.getExpDate());
@@ -402,10 +353,6 @@ public class Database {
         }
     }
     
-    /**
-    * Decrements the quantity of a kiosk_inv row by SKU.
-    * Called at checkout for each cart item.
-    */
     public boolean updateStockQuantity(String sku, int newQuantity) {
         String query = "UPDATE kiosk_inv SET quantity = ? WHERE sku = ? COLLATE NOCASE";
         try (PreparedStatement exec = database.prepareStatement(query)) {
@@ -452,10 +399,6 @@ public class Database {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════════
-    // TABLE CREATION  (dev only — not used in release)
-    // ═════════════════════════════════════════════════════════════════════════
-
     public void makeTable() {
         String[] queries = {
             """
@@ -490,7 +433,7 @@ public class Database {
                 min_stock    INTEGER NOT NULL DEFAULT 10,
                 unit         TEXT NOT NULL DEFAULT 'pcs',
                 available    INTEGER NOT NULL DEFAULT 1,
-                image_id     INTEGER DEFAULT 0,
+                image_id     TEXT NOT NULL,
                 sup_name     TEXT NOT NULL,
                 last_restock TEXT NOT NULL,
                 exp_date     TEXT NOT NULL,

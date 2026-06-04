@@ -24,7 +24,7 @@ public class Stock {
     private int     minStock;
     private String  unit;
     private boolean available;
-    private int     imageId;
+    private String  imageId;
     private String  supName;
     private String  lastRestock;
     private String  expDate;
@@ -35,7 +35,7 @@ public class Stock {
     public Stock(int id, int drugId, String sku, String dosage, String form,
                  String packaging, double origPrice, double price, double discount,
                  int quantity, int minStock, String unit, boolean available,
-                 int imageId, String supName, String lastRestock, String expDate,
+                 String imageId, String supName, String lastRestock, String expDate,
                  String createdAt, String updatedAt) {
         this.id          = id;
         this.drugId      = drugId;
@@ -65,7 +65,7 @@ public class Stock {
     public Stock(int drugId, String sku, String dosage, String form,
                  String packaging, double origPrice, double price, double discount,
                  int quantity, int minStock, String unit, boolean available,
-                 int imageId, String supName, String lastRestock, String expDate) {
+                 String imageId, String supName, String lastRestock, String expDate) {
         this(-1, drugId, sku, dosage, form, packaging, origPrice, price, discount,
              quantity, minStock, unit, available, imageId, supName, lastRestock,
              expDate, "", "");
@@ -84,7 +84,7 @@ public class Stock {
     public int     getMinStock()    { return minStock;    }
     public String  getUnit()        { return unit;        }
     public boolean isAvailable()    { return available;   }
-    public int     getImageId()     { return imageId;     }
+    public String  getImageId()     { return imageId;     }
     public String  getSupName()     { return supName;     }
     public String  getLastRestock() { return lastRestock; }
     public String  getExpDate()     { return expDate;     }
